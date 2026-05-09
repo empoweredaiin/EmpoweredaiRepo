@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DAX Reference · EmpoweredAI</title>
+<title>DAX Systems · EmpoweredAI</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@300;400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/images/emp_favicon.png">
 <style>
   :root {
     --black: #111214;
@@ -64,13 +65,15 @@
   }
 
   .logo {
-    font-family: var(--body);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--white);
+    display: inline-flex;
+    align-items: center;
     text-decoration: none;
+  }
+
+  .brand-logo {
+    height: 24px;
+    width: auto;
+    display: block;
   }
 
   .header-center {
@@ -94,6 +97,25 @@
     font-size: 10px;
     letter-spacing: 0.1em;
     color: var(--muted);
+  }
+
+  .front-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .card-difficulty-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(201,74,42,0.2);
+    padding: 4px 8px;
+    border-radius: 999px;
   }
 
   .header-right {
@@ -174,6 +196,189 @@
     letter-spacing: 0.08em;
     min-width: 44px;
     text-align: right;
+  }
+
+  .why-built {
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .why-built-inner {
+    max-width: 920px;
+    margin: 0 auto;
+    display: grid;
+    gap: 12px;
+  }
+
+  .why-built-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    font-weight: 600;
+  }
+
+  .why-built h2 {
+    font-family: var(--display);
+    font-size: 24px;
+    line-height: 1.35;
+    color: var(--white);
+    max-width: 760px;
+  }
+
+  .why-built p {
+    font-size: 14px;
+    color: var(--muted2);
+    line-height: 1.8;
+    max-width: 720px;
+  }
+
+  .lead-capture {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+    gap: 24px;
+    align-items: start;
+    padding: 24px 40px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .lead-copy {
+    display: grid;
+    gap: 10px;
+  }
+
+  .lead-copy .lead-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent2);
+    font-weight: 600;
+  }
+
+  .lead-copy h2 {
+    font-family: var(--display);
+    font-size: 24px;
+    line-height: 1.35;
+    color: var(--white);
+    max-width: 620px;
+  }
+
+  .lead-copy p {
+    font-size: 14px;
+    color: var(--muted2);
+    line-height: 1.8;
+    max-width: 640px;
+  }
+
+  .lead-form {
+    display: grid;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    border-radius: 4px;
+  }
+
+  .lead-form label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .lead-form input {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 3px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.03);
+    color: var(--white);
+    font-family: var(--body);
+    font-size: 13px;
+  }
+
+  .lead-form input::placeholder {
+    color: rgba(255,255,255,0.4);
+  }
+
+  .lead-form button {
+    border: none;
+    background: var(--accent);
+    color: var(--white);
+    padding: 14px 18px;
+    font-family: var(--body);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .lead-form button:hover { background: var(--accent2); }
+
+  .library-section {
+    padding: 24px 40px;
+    background: rgba(255,255,255,0.01);
+  }
+
+  .library-header {
+    max-width: 920px;
+    margin: 0 auto 20px;
+  }
+
+  .library-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .library-section h2 {
+    font-family: var(--display);
+    font-size: 24px;
+    line-height: 1.35;
+    color: var(--white);
+    max-width: 760px;
+  }
+
+  .library-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  .library-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 18px;
+    border-radius: 4px;
+    display: grid;
+    gap: 10px;
+  }
+
+  .library-card h3 {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent2);
+  }
+
+  .library-card p {
+    font-size: 13px;
+    color: var(--muted2);
+    line-height: 1.7;
   }
 
   /* ─── CARD AREA ─── */
@@ -594,6 +799,23 @@
 
   .footer-mastered span { color: var(--green); font-weight: 600; }
 
+  .footer-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin: 8px 0;
+  }
+
+  .footer-meta a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .footer-meta a:hover {
+    color: var(--white);
+  }
+
   /* ─── MOBILE ─── */
   @media (max-width: 480px) {
     header { padding: 14px 20px; }
@@ -603,19 +825,24 @@
     .progress-bar-wrapper { padding: 10px 20px; }
     .card-area { padding: 20px 16px 12px; }
 
-    .flip-container { height: auto; min-height: 280px; }
-    .flip-front, .flip-back { padding: 24px 24px; }
-    .flip-front { position: relative; height: 280px; }
-    .flip-back { position: absolute; }
-    .scenario-text { font-size: 15px; }
+    .flip-container { height: auto; min-height: 320px; }
+    .flip-front, .flip-back { padding: 28px 22px; }
+    .flip-front { position: relative; height: auto; min-height: 320px; }
+    .flip-back { position: relative; min-height: 320px; }
+    .scenario-text { font-size: 16px; line-height: 1.75; }
     .back-function-name { font-size: 36px; }
-    .back-syntax { font-size: 11px; }
-    .back-explanation { flex-direction: column; gap: 10px; }
-    .back-exp-text { font-size: 12px; }
+    .back-syntax { font-size: 12px; }
+    .back-explanation { flex-direction: column; gap: 16px; }
+    .back-exp-text { font-size: 13px; line-height: 1.85; }
 
     .nav-row { padding: 14px 20px 10px; gap: 6px; }
     .nav-btn { padding: 9px 18px; font-size: 11px; }
     .nav-btn.flip-btn { padding: 9px 30px; }
+
+    .lead-capture { grid-template-columns: 1fr; padding: 20px; }
+    .library-section { padding: 20px; }
+    .library-grid { grid-template-columns: 1fr; }
+    .lead-form { width: 100%; }
 
     .cta-strip { padding: 20px; flex-direction: column; align-items: flex-start; gap: 14px; }
     .cta-strip-btn { width: 100%; text-align: center; padding: 13px; }
@@ -629,13 +856,23 @@
 
 <!-- ─── HEADER ─── -->
 <header>
-  <a href="https://empoweredai.in" class="logo">EmpoweredAI</a>
+  <a href="mailto:nikhil@kravon.in?subject=EmpoweredAI%20DAX%20Systems" class="logo">
+    <img src="assets/images/Emp_logo.png" alt="EmpoweredAI" class="brand-logo">
+  </a>
   <div class="header-center">
-    <div class="header-title">DAX Reference</div>
-    <div class="header-sub">Scenario-Based · Power BI</div>
+    <div class="header-title">Decision Systems Library</div>
+    <div class="header-sub">Built by EMPOWEREDAI · Used in our BI workshops</div>
   </div>
   <div class="header-right">Done: <span id="masteredCount">0</span></div>
 </header>
+
+<section class="why-built">
+  <div class="why-built-inner">
+    <div class="why-built-label">Why we built this</div>
+    <h2>Most DAX references teach syntax. This system teaches business reasoning through operational scenarios.</h2>
+    <p>It is designed for analysts and decision teams who need a reasoning-first reference. Each scenario links DAX to real BI workflows, not just formula memorization.</p>
+  </div>
+</section>
 
 <!-- ─── TABS ─── -->
 <div class="tabs-wrapper">
@@ -658,7 +895,10 @@
       <!-- FRONT -->
       <div class="flip-front">
         <div class="front-top">
-          <div class="card-category-tag" id="frontCategory"></div>
+          <div class="front-tags">
+            <div class="card-difficulty-tag" id="frontLevel"></div>
+            <div class="card-category-tag" id="frontCategory"></div>
+          </div>
           <button class="mastered-btn" id="masteredBtn" onclick="toggleMastered(event)">✓ Got it</button>
         </div>
         <div class="front-body">
@@ -714,15 +954,64 @@
 <div class="cta-strip">
   <div class="cta-strip-text">
     <div class="cta-strip-line1">You've seen the functions. Now use them on real data.</div>
-    <div class="cta-strip-line2">Two days. One dashboard. Portfolio-ready by Monday.</div>
+    <div class="cta-strip-line2">A BI sprint built for business reasoning and operational teams.</div>
   </div>
-  <a href="https://empoweredai.in" class="cta-strip-btn">Join the Sprint — ₹999</a>
+  <a href="mailto:nikhil@kravon.in?subject=Explore%20the%20BI%20Sprint" class="cta-strip-btn">Explore the BI Sprint</a>
 </div>
 
-<!-- ─── FOOTER ─── -->
+<section class="library-section">
+  <div class="library-header">
+    <div class="library-label">Decision Systems Library</div>
+    <h2>From DAX systems to KPI frameworks, this is the start of a broader operational BI reference.</h2>
+  </div>
+  <div class="library-grid">
+    <div class="library-card">
+      <h3>DAX systems</h3>
+      <p>Patterns and reusable formula structures for modern analytics teams.</p>
+    </div>
+    <div class="library-card">
+      <h3>KPI frameworks</h3>
+      <p>Decision-aligned metrics and reporting logic built around business outcomes.</p>
+    </div>
+    <div class="library-card">
+      <h3>Dashboard systems</h3>
+      <p>Practical structures that guide executives and operators through the same story.</p>
+    </div>
+    <div class="library-card">
+      <h3>Reporting logic</h3>
+      <p>Clear rules for when a measure is meaningful and when it is just noise.</p>
+    </div>
+    <div class="library-card">
+      <h3>Prompt frameworks</h3>
+      <p>Business-focused prompts for analytics, summaries and data storyboarding.</p>
+    </div>
+  </div>
+</section>
+
+<section class="lead-capture">
+  <div class="lead-copy">
+    <div class="lead-tag">Save progress</div>
+    <h2>Request the full reference sheet and the complete DAX systems library.</h2>
+    <p>Leave your work email for a compact guide that supports your BI sprint and teams working with decision systems.</p>
+  </div>
+  <form class="lead-form" action="mailto:nikhil@kravon.in?subject=Request%20DAX%20System%20Library" method="get" enctype="text/plain">
+    <label for="leadName">Name</label>
+    <input id="leadName" name="name" type="text" placeholder="Your name" required>
+    <label for="leadEmail">Work email</label>
+    <input id="leadEmail" name="email" type="email" placeholder="you@company.com" required>
+    <label for="leadCompany">Company</label>
+    <input id="leadCompany" name="company" type="text" placeholder="Company name" required>
+    <button type="submit">Request the guide</button>
+  </form>
+</section>
+
 <footer>
-  <div class="footer-brand"><strong>EmpoweredAI</strong> · Business Analytics Weekend Sprint</div>
-  <div class="footer-mastered">Done: <span id="masteredCountFooter">0</span></div>
+  <div class="footer-brand"><img src="assets/images/Emp_logo.png" alt="EmpoweredAI" class="brand-logo"></div>
+  <div class="footer-meta">
+    <a href="https://studios.kravon.in" target="_blank" rel="noopener">KravonStudios™</a> ·
+    <a href="mailto:nikhil@kravon.in">nikhil@kravon.in</a> ·
+    <a href="https://wa.me/917208526046">+91 72085 26046</a>
+  </div>
 </footer>
 
 <script>
@@ -1050,6 +1339,19 @@ const data = {
   ],
 };
 
+const categoryLevels = {
+  "Aggregation Logic": "Foundation",
+  "Text Ops": "Foundation",
+  "Logical": "Foundation",
+  "Date Logic": "Intermediate",
+  "Time-Based Analysis": "Intermediate",
+  "Statistical": "Intermediate",
+  "Context Control": "Advanced",
+  "Table Transformations": "Advanced",
+  "Filter Context": "Advanced",
+  "Ranking": "Advanced"
+};
+
 const categories = Object.keys(data);
 let currentCat = categories[0];
 let currentIndex = 0;
@@ -1082,6 +1384,7 @@ function renderCard() {
   flipEl.classList.toggle('flipped', isFlipped);
 
   document.getElementById('frontCategory').textContent = currentCat;
+  document.getElementById('frontLevel').textContent = categoryLevels[currentCat] || 'Foundation';
   document.getElementById('frontScenario').innerHTML = card.scenario;
   document.getElementById('backName').textContent = card.name;
   document.getElementById('backCategory').textContent = currentCat;
