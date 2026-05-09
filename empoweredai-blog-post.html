@@ -448,6 +448,50 @@
     }
 
     /* Final CTA */
+    .pdf-magnet {
+      margin: 56px 0;
+      padding: 28px 32px;
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .pdf-magnet-icon {
+      font-size: 40px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .pdf-magnet-body { flex: 1; min-width: 0; }
+    .pdf-magnet-eyebrow {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .pdf-magnet-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 18px;
+      text-transform: uppercase;
+      color: var(--white);
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+    .pdf-magnet-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .pdf-magnet-btn { white-space: nowrap; flex-shrink: 0; }
+    @media (max-width: 640px) {
+      .pdf-magnet { flex-direction: column; align-items: flex-start; }
+      .pdf-magnet-btn { width: 100%; text-align: center; }
+    }
+
     .article-cta {
       margin-top: 72px;
       padding: 40px;
@@ -669,11 +713,8 @@
     <img src="assets/images/Emp_logo.png" alt="EmpoweredAI" class="brand-logo">
   </a>
   <ul class="nav-links">
-    <li><a href="#">The 8 Hours</a></li>
-    <li><a href="#">Engagements</a></li>
-    <li><a href="#">About</a></li>
-    <li><a href="#">Investment</a></li>
-    <li><a href="#" class="btn-nav">Book a Scoping Call</a></li>
+    <li><a href="dax-flashcards-v3.html">DAX Flash Cards</a></li>
+    <li><a href="Why%20Great%20Dashboards%20Show%20Decisions%2C%20Not%20Numbers.pdf" download class="btn-nav">Download PDF</a></li>
   </ul>
 </nav>
 
@@ -813,6 +854,17 @@
 
     <p>Not information density. Not dashboard complexity. Not visual decoration. The metric that matters is how fast a signal becomes an action.</p>
 
+    <!-- PDF LEAD MAGNET -->
+    <div class="pdf-magnet reveal">
+      <div class="pdf-magnet-icon">📄</div>
+      <div class="pdf-magnet-body">
+        <div class="pdf-magnet-eyebrow">Free Download</div>
+        <div class="pdf-magnet-title">Why Great Dashboards Show Decisions, Not Numbers</div>
+        <div class="pdf-magnet-desc">The principle behind this article — in a single shareable PDF. Pass it to your team before the next dashboard review.</div>
+      </div>
+      <a href="Why%20Great%20Dashboards%20Show%20Decisions%2C%20Not%20Numbers.pdf" download class="btn-primary pdf-magnet-btn">Download Free PDF →</a>
+    </div>
+
     <!-- SECTION 6 -->
     <h2 id="verdicts">Stop Showing Comparisons. Start Showing Verdicts.</h2>
 
@@ -942,11 +994,11 @@
 
     <!-- CTA -->
     <div class="article-cta">
-      <div class="eyebrow">Work With Us</div>
-      <h3>Your Team Can Build This<br>In One Day.</h3>
-      <p>The Business Intelligence Sprint turns messy, untrusted data into dashboards leadership will actually open — in 8 hours.</p>
-      <a href="#" class="btn-primary">Book a Scoping Call</a>
-      <a href="#" class="btn-ghost">See all engagements →</a>
+      <div class="eyebrow">Free Download</div>
+      <h3>Take This With You.<br>Share It With Your Team.</h3>
+      <p>Every principle in this article in a single shareable PDF — built for analysts, BI leads, and the executives who need to see it.</p>
+      <a href="Why%20Great%20Dashboards%20Show%20Decisions%2C%20Not%20Numbers.pdf" download class="btn-primary">Download Free PDF →</a>
+      <a href="dax-flashcards-v3.html" class="btn-ghost">Explore DAX Flash Cards →</a>
     </div>
 
   </article>
@@ -993,9 +1045,9 @@
     <div class="sidebar-section">
       <div class="sidebar-label">Related Engagement</div>
       <div class="engagement-card">
-        <h4>Business Intelligence Sprint</h4>
-        <p>Turn raw data into dashboards leadership will open. For analysts & BI teams.</p>
-        <a href="#" class="btn-primary" style="font-size:10px;padding:9px 16px">Book Scoping Call</a>
+        <h4>Why Great Dashboards Show Decisions, Not Numbers</h4>
+        <p>The principle behind this article — free PDF to share with your team or leadership.</p>
+        <a href="Why%20Great%20Dashboards%20Show%20Decisions%2C%20Not%20Numbers.pdf" download class="btn-primary" style="font-size:10px;padding:9px 16px">Download Free PDF →</a>
       </div>
     </div>
   </aside>

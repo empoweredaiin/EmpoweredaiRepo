@@ -47,7 +47,7 @@
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
     padding: 20px 48px;
-    background: var(--paper);
+    background: var(--ink);
     border-bottom: 1px solid var(--border);
   }
 
@@ -55,7 +55,7 @@
     font-family: 'Bebas Neue', sans-serif;
     font-size: 22px;
     letter-spacing: 0.08em;
-    color: var(--ink);
+    color: var(--paper);
     text-decoration: none;
   }
 
@@ -70,10 +70,10 @@
   .nav-links { display: flex; gap: 32px; list-style: none; }
   .nav-links a {
     font-size: 13px; font-weight: 500; letter-spacing: 0.05em;
-    text-transform: uppercase; color: var(--mid); text-decoration: none;
+    text-transform: uppercase; color: rgba(242,239,232,0.6); text-decoration: none;
     transition: color 0.2s;
   }
-  .nav-links a:hover { color: var(--ink); }
+  .nav-links a:hover { color: var(--paper); }
 
   .nav-cta {
     background: var(--ink); color: var(--paper);
@@ -927,11 +927,9 @@
     <img src="assets/images/Emp_logo.png" alt="EmpoweredAI" class="brand-logo">
   </a>
   <ul class="nav-links">
-    <li><a href="#workshops">Workshops</a></li>
-    <li><a href="#outputs">Outputs</a></li>
-    <li><a href="#tools">Tools</a></li>
-    <li><a href="#engagement">Engagement</a></li>
-    <li><a href="#faq">FAQ</a></li>
+    <li><a href="empoweredai-blog-post.html">Blog</a></li>
+    <li><a href="dax-flashcards-v3.html">DAX Flash Cards</a></li>
+    <li><a href="Why%20Great%20Dashboards%20Show%20Decisions%2C%20Not%20Numbers.pdf" download>Download PDF</a></li>
   </ul>
   <a href="#final-cta" class="nav-cta">Book Discovery Call</a>
   <button class="nav-hamburger" id="hamburger" aria-label="Open menu">
@@ -942,11 +940,9 @@
 <!-- MOBILE DRAWER -->
 <div class="nav-drawer" id="nav-drawer">
   <button class="drawer-close" id="drawer-close" aria-label="Close menu">×</button>
-  <a href="#workshops" onclick="closeDrawer()">Workshops</a>
-  <a href="#outputs" onclick="closeDrawer()">Outputs</a>
-  <a href="#tools" onclick="closeDrawer()">Tools</a>
-  <a href="#engagement" onclick="closeDrawer()">Engagement</a>
-  <a href="#faq" onclick="closeDrawer()">FAQ</a>
+  <a href="empoweredai-blog-post.html" onclick="closeDrawer()">Blog</a>
+  <a href="dax-flashcards-v3.html" onclick="closeDrawer()">DAX Flash Cards</a>
+  <a href="Why%20Great%20Dashboards%20Show%20Decisions%2C%20Not%20Numbers.pdf" download onclick="closeDrawer()">Download PDF</a>
   <a href="#final-cta" class="nav-drawer-cta" onclick="closeDrawer()">Book Discovery Call</a>
 </div>
 
@@ -1505,8 +1501,9 @@
     </div>
     <ul class="footer-links">
       <li><a href="#workshops">Workshops</a></li>
-      <li><a href="#about">About</a></li>
       <li><a href="empoweredai-blog-post.html">Blog</a></li>
+      <li><a href="dax-flashcards-v3.html">DAX Flash Cards</a></li>
+      <li><a href="Why%20Great%20Dashboards%20Show%20Decisions%2C%20Not%20Numbers.pdf" download>Download PDF</a></li>
       <li><a href="#final-cta">Contact</a></li>
     </ul>
     <p class="footer-meta">KravonStudios™ · <a href="https://studios.kravon.in" target="_blank" rel="noopener">studios.kravon.in</a> · <a href="mailto:nikhil@kravon.in">nikhil@kravon.in</a> · <a href="https://wa.me/917208526046">+91 72085 26046</a></p>
@@ -1516,7 +1513,7 @@
 <div class="mobile-sticky-cta" aria-label="Mobile action bar">
   <div class="mobile-sticky-inner">
     <a href="#final-cta" class="mobile-primary">Book Discovery Call</a>
-    <a href="#resource" class="mobile-secondary">Get Workshop PDF</a>
+    <a href="Why%20Great%20Dashboards%20Show%20Decisions%2C%20Not%20Numbers.pdf" download class="mobile-secondary">Download Free PDF</a>
   </div>
 </div>
 
