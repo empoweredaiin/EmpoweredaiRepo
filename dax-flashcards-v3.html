@@ -825,10 +825,9 @@
     .progress-bar-wrapper { padding: 10px 20px; }
     .card-area { padding: 20px 16px 12px; }
 
-    .flip-container { height: auto; min-height: 320px; }
-    .flip-front, .flip-back { padding: 28px 22px; }
-    .flip-front { position: relative; height: auto; min-height: 320px; }
-    .flip-back { position: relative; min-height: 320px; }
+    .flip-container { height: 500px; }
+    .flip-front, .flip-back { padding: 24px 20px; }
+    .flip-back { overflow-y: auto; }
     .scenario-text { font-size: 16px; line-height: 1.75; }
     .back-function-name { font-size: 36px; }
     .back-syntax { font-size: 12px; }
@@ -1426,7 +1425,8 @@ function renderMasteredCount() {
   let count = 0;
   categories.forEach(cat => mastered[cat].forEach(v => { if (v) count++; }));
   document.getElementById('masteredCount').textContent = count;
-  document.getElementById('masteredCountFooter').textContent = count;
+  const footerEl = document.getElementById('masteredCountFooter');
+  if (footerEl) footerEl.textContent = count;
 }
 
 function render() {

@@ -6,17 +6,23 @@
 <title>EMPOWEREDAI — 1-Day Decision Workshops</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@300;400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600&display=swap" rel="stylesheet" />
 <link rel="icon" type="image/png" href="assets/images/emp_favicon.png">
 <style>
   :root {
-    --ink: #0a0a0a;
-    --paper: #f2efe8;
-    --accent: #e8430a;
-    --accent2: #1a3a2a;
-    --mid: #6b6460;
-    --border: rgba(10,10,10,0.12);
-    --card: #ffffff;
+    --black:    #111214;
+    --off-black: #17181b;
+    --surface:  #1e1f23;
+    --white:    #e8e6e1;
+    --muted2:   #9a9ba0;
+    /* Legacy aliases — values swapped for dark theme */
+    --ink:    #111214;
+    --paper:  #17181b;
+    --accent:  #c94a2a;
+    --accent2: #e8603d;
+    --mid:    #6a6870;
+    --border: rgba(255,255,255,0.07);
+    --card:   #26272c;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -26,7 +32,7 @@
   body {
     background: var(--paper);
     color: var(--ink);
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Barlow', sans-serif;
     font-size: 16px;
     line-height: 1.6;
     overflow-x: hidden;
@@ -52,7 +58,7 @@
   }
 
   .nav-logo {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: 22px;
     letter-spacing: 0.08em;
     color: var(--paper);
@@ -99,7 +105,7 @@
 
   .hero-eyebrow {
     display: inline-flex; align-items: center; gap: 10px;
-    font-family: 'DM Mono', monospace; font-size: 12px;
+    font-family: 'Barlow Semi Condensed', sans-serif; font-size: 12px;
     letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent);
     margin-bottom: 32px;
   }
@@ -108,7 +114,7 @@
   }
 
   .hero-headline {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: clamp(72px, 10vw, 148px);
     line-height: 0.92;
     letter-spacing: 0.01em;
@@ -155,7 +161,7 @@
 
   .trust-line {
     margin-top: 56px;
-    font-family: 'DM Mono', monospace; font-size: 11px;
+    font-family: 'Barlow Semi Condensed', sans-serif; font-size: 11px;
     letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
     display: flex; align-items: center; gap: 16px;
   }
@@ -166,7 +172,7 @@
   .hero-ticker {
     position: absolute; right: 48px; top: 50%; transform: translateY(-50%);
     writing-mode: vertical-rl; text-orientation: mixed;
-    font-family: 'Bebas Neue', sans-serif; font-size: 200px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 200px;
     color: rgba(10,10,10,0.04); letter-spacing: -0.02em;
     pointer-events: none; user-select: none;
     white-space: nowrap;
@@ -183,7 +189,7 @@
   }
   .stat-item { text-align: center; }
   .stat-num {
-    font-family: 'Bebas Neue', sans-serif; font-size: 42px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 42px;
     color: var(--accent); letter-spacing: 0.02em; line-height: 1;
   }
   .stat-label {
@@ -195,13 +201,13 @@
   #problem { background: var(--ink); color: var(--paper); }
 
   .section-tag {
-    font-family: 'DM Mono', monospace; font-size: 11px;
+    font-family: 'Barlow Semi Condensed', sans-serif; font-size: 11px;
     letter-spacing: 0.14em; text-transform: uppercase;
     color: var(--accent); margin-bottom: 24px; display: block;
   }
 
   .section-headline {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: clamp(42px, 5vw, 72px);
     line-height: 1;
     letter-spacing: 0.02em;
@@ -222,7 +228,7 @@
   .problem-card:hover { background: #141414; }
 
   .problem-num {
-    font-family: 'Bebas Neue', sans-serif; font-size: 56px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 56px;
     color: rgba(232,67,10,0.2); line-height: 1; margin-bottom: 16px;
   }
   .problem-text { font-size: 16px; font-weight: 300; color: rgba(242,239,232,0.7); line-height: 1.7; }
@@ -232,7 +238,7 @@
     padding-left: 24px;
   }
   .punchline p {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: clamp(28px, 3.5vw, 44px);
     line-height: 1.1; color: var(--paper);
   }
@@ -305,13 +311,13 @@
   .wcard.bronze::before { background: var(--accent); }
 
   .wcard-badge {
-    font-family: 'DM Mono', monospace; font-size: 10px;
+    font-family: 'Barlow Semi Condensed', sans-serif; font-size: 10px;
     letter-spacing: 0.14em; text-transform: uppercase;
     color: var(--mid); margin-bottom: 20px; display: block;
   }
 
   .wcard h3 {
-    font-family: 'Bebas Neue', sans-serif; font-size: 30px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 30px;
     letter-spacing: 0.03em; line-height: 1.1; margin-bottom: 8px;
   }
   .wcard .for-label {
@@ -413,7 +419,7 @@
     color: var(--ink); padding: 12px 0; outline: none;
   }
   summary::-webkit-details-marker { display: none; }
-  summary::after { content: '+'; float: right; color: var(--accent); font-family: 'DM Mono', monospace; }
+  summary::after { content: '+'; float: right; color: var(--accent); font-family: 'Barlow Semi Condensed', sans-serif; }
   details[open] summary::after { content: '−'; }
   .faq-answer { margin-top: 14px; font-size: 14px; color: var(--mid); line-height: 1.8; }
 
@@ -475,7 +481,7 @@
     font-size: 16px; font-weight: 300; color: var(--mid); margin-bottom: 24px;
   }
   .outputs-copy .emphasis {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: 22px; color: var(--ink); letter-spacing: 0.03em;
   }
 
@@ -497,7 +503,7 @@
   .step:last-child { border-right: none; }
 
   .step-num {
-    font-family: 'Bebas Neue', sans-serif; font-size: 64px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 64px;
     color: rgba(10,10,10,0.06); line-height: 1;
     position: absolute; top: 16px; right: 20px;
   }
@@ -505,7 +511,7 @@
   .step p { font-size: 13px; color: var(--mid); line-height: 1.7; }
 
   .step-tag {
-    font-family: 'DM Mono', monospace; font-size: 10px;
+    font-family: 'Barlow Semi Condensed', sans-serif; font-size: 10px;
     letter-spacing: 0.14em; text-transform: uppercase;
     color: var(--accent); margin-bottom: 10px; display: block;
   }
@@ -534,13 +540,13 @@
     border-left: 3px solid var(--accent); padding-left: 28px; margin-top: 48px;
   }
   .why-punchline p {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: clamp(28px, 3vw, 44px);
     line-height: 1.1; color: var(--ink);
   }
 
   .this-is-not {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: clamp(56px, 7vw, 100px);
     line-height: 0.9; color: var(--ink);
   }
@@ -558,13 +564,13 @@
     width: 100%; aspect-ratio: 1;
     background: linear-gradient(135deg, #1a3a2a 0%, #0f2016 100%);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: 80px; color: rgba(232,67,10,0.6);
     margin-bottom: 20px;
   }
 
   .about-name {
-    font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 28px;
     letter-spacing: 0.05em; margin-bottom: 4px;
   }
   .about-role {
@@ -591,7 +597,7 @@
 
   .about-data-line {
     margin-top: 40px;
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: 26px; color: var(--paper);
     border-left: 3px solid var(--accent); padding-left: 20px;
   }
@@ -622,7 +628,7 @@
   }
 
   #final-cta .big-text {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: clamp(64px, 10vw, 140px);
     line-height: 0.9; letter-spacing: 0.01em;
     margin-bottom: 48px;
@@ -665,7 +671,7 @@
     flex-wrap: wrap; gap: 24px;
   }
   .footer-logo {
-    font-family: 'Bebas Neue', sans-serif; font-size: 20px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 20px;
     letter-spacing: 0.08em; color: var(--paper);
   }
   .footer-logo span { color: var(--accent); }
@@ -727,7 +733,7 @@
     animation: marquee 18s linear infinite;
   }
   .marquee-item {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: 18px; letter-spacing: 0.08em;
     padding: 0 32px; color: var(--mid);
     display: flex; align-items: center; gap: 16px;
@@ -790,7 +796,7 @@
   }
   .nav-drawer.open { display: flex; }
   .nav-drawer a {
-    font-family: 'Bebas Neue', sans-serif; font-size: 42px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 42px;
     letter-spacing: 0.04em; color: var(--ink); text-decoration: none;
     padding: 12px 0; border-bottom: 1px solid var(--border);
     transition: color 0.15s;
@@ -825,7 +831,7 @@
     margin-bottom: 40px; flex-wrap: wrap; gap: 16px;
   }
   .cred-label {
-    font-family: 'DM Mono', monospace; font-size: 11px;
+    font-family: 'Barlow Semi Condensed', sans-serif; font-size: 11px;
     letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent);
   }
   .cred-grid {
@@ -838,12 +844,12 @@
   }
   .cred-card:hover { background: #141414; }
   .cred-role {
-    font-family: 'DM Mono', monospace; font-size: 10px;
+    font-family: 'Barlow Semi Condensed', sans-serif; font-size: 10px;
     letter-spacing: 0.12em; text-transform: uppercase;
     color: var(--accent); margin-bottom: 10px;
   }
   .cred-org {
-    font-family: 'Bebas Neue', sans-serif; font-size: 24px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 24px;
     letter-spacing: 0.04em; color: var(--paper); margin-bottom: 10px;
   }
   .cred-desc {
@@ -866,19 +872,19 @@
   }
   .proof-divider { background: var(--border); height: 100%; }
   .proof-quote {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: clamp(20px, 2.5vw, 30px);
     line-height: 1.2; color: var(--ink);
     margin-bottom: 16px;
   }
   .proof-attr {
-    font-family: 'DM Mono', monospace; font-size: 11px;
+    font-family: 'Barlow Semi Condensed', sans-serif; font-size: 11px;
     letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
   }
   .proof-stats { display: flex; flex-direction: column; gap: 20px; }
   .proof-stat-row { display: flex; align-items: baseline; gap: 16px; }
   .proof-stat-num {
-    font-family: 'Bebas Neue', sans-serif; font-size: 44px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 44px;
     color: var(--accent); line-height: 1;
   }
   .proof-stat-label { font-size: 13px; color: var(--mid); }
@@ -917,6 +923,76 @@
     display: block;
     filter: grayscale(20%);
   }
+
+  /* ─── BRAND DARK THEME CORRECTIONS ─── */
+  body { color: var(--white); }
+
+  .hero-headline { color: var(--white); }
+  .hero-headline .stroke { -webkit-text-stroke: 2px rgba(232,230,225,0.4); color: transparent; }
+  .hero-ticker { color: rgba(255,255,255,0.04); }
+
+  .btn-outline { color: var(--white); border-color: rgba(255,255,255,0.28); }
+  .btn-outline:hover { background: rgba(255,255,255,0.07); color: var(--white); border-color: rgba(255,255,255,0.5); }
+  .btn-primary:hover { background: var(--accent2); }
+
+  .nav-hamburger span { background: var(--white); }
+  .nav-cta { color: var(--white); }
+  .nav-links a:hover { color: var(--white); }
+
+  .stats-bar { color: var(--white); }
+  .stat-label { color: rgba(232,230,225,0.5); }
+
+  #problem { color: var(--white); }
+  .problem-text { color: rgba(232,230,225,0.7); }
+  .punchline p { color: var(--white); }
+
+  #how-it-works { background: var(--paper); }
+  .step-num { color: rgba(255,255,255,0.06); }
+
+  .proof-strip { background: var(--surface); }
+  .proof-divider { background: rgba(255,255,255,0.08); }
+  .proof-quote { color: var(--white); }
+
+  .wcard-outcome { background: var(--surface); color: var(--white); border-left-color: var(--accent); }
+  .deliverables li { color: var(--white); }
+  .tool-features li { color: var(--white); }
+  .outputs-copy .emphasis { color: var(--white); }
+
+  summary { color: var(--white); }
+
+  .why-item p { color: var(--white); }
+  .why-punchline p { color: var(--white); }
+  .this-is-not { color: var(--white); }
+  .ideal-item:hover .ideal-title { color: var(--white); }
+
+  .nav-drawer { background: var(--black); }
+  .nav-drawer a { color: var(--white); }
+  .nav-drawer a:hover { color: var(--accent2); }
+  .drawer-close { color: var(--white); }
+
+  .mobile-sticky-cta {
+    background: rgba(17,18,20,0.97);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 -12px 34px rgba(0,0,0,0.5);
+  }
+  .mobile-sticky-cta .mobile-primary { background: var(--accent); color: var(--white); }
+  .mobile-sticky-cta .mobile-secondary { color: var(--white); border: 1px solid rgba(255,255,255,0.2); }
+
+  #about { color: var(--white); }
+  .about-avatar { background: linear-gradient(135deg, var(--surface) 0%, var(--black) 100%); color: var(--accent); }
+  .about-data-line { color: var(--white); }
+
+  .cred-org { color: var(--white); }
+
+  .resource-form { color: var(--white); border: 1px solid rgba(255,255,255,0.1); }
+  .resource-note { color: rgba(232,230,225,0.45); }
+
+  .marquee-wrapper { background: var(--black); }
+  .marquee-item { color: var(--mid); }
+
+  footer { color: var(--white); }
+  .footer-logo { color: var(--white); }
+  .footer-logo span { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -1482,7 +1558,7 @@
     <div class="cta-options fade-up">
       <a href="https://wa.me/917208526046?text=Hi%20Nikhil%2C%20I%27d%20like%20to%20schedule%20a%20discovery%20call%20for%20an%20EmpoweredAI%20workshop." class="btn-wa" target="_blank">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.551 4.104 1.514 5.831L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.886 0-3.655-.523-5.17-1.432l-.37-.22-3.762.984.998-3.648-.242-.378A9.956 9.956 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
-        WhatsApp Nikhil
+        WhatsApp Us
       </a>
       <a href="mailto:nikhil@kravon.in?subject=EmpoweredAI%20Discovery%20Call&body=Hi%20Nikhil%2C%20I%27d%20like%20to%20schedule%20a%20discovery%20call." class="btn-email">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
