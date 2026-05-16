@@ -18,7 +18,12 @@
       "Bash(git remote *)",
       "Bash(git add *)",
       "Bash(git rm *)",
-      "Bash(Remove-Item -Recurse -Force \"WebBase\\\\.git\")"
+      "Bash(Remove-Item -Recurse -Force \"WebBase\\\\.git\")",
+      "Bash(git restore *)",
+      "Bash(git commit -m ' *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Nikhil\\EmpowerdAi\\WebBase"
     ]
   }
 }
