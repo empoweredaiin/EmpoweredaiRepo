@@ -32,6 +32,7 @@
       font-weight: 300;
       line-height: 1.7;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
     /* ── NAV ── */
@@ -227,12 +228,11 @@
     article h3 {
       font-family: 'Barlow', sans-serif;
       font-weight: 600;
-      font-size: 16px;
+      font-size: 11px;
       color: var(--accent-h);
       margin: 36px 0 12px;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      font-size: 11px;
     }
 
     /* Body copy */
@@ -299,10 +299,15 @@
     }
 
     /* Comparison tables */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 28px 0;
+    }
     .compare-table {
       width: 100%;
+      min-width: 340px;
       border-collapse: collapse;
-      margin: 28px 0;
       font-size: 14px;
     }
     .compare-table th {
@@ -702,6 +707,60 @@
       .layout { padding: 0 24px; }
       .principle { grid-template-columns: 1fr; }
       .principle-label { border-right: none; border-bottom: 1px solid var(--border); }
+      footer { padding: 28px 24px; flex-direction: column; align-items: flex-start; gap: 10px; }
+      .verdict-block { flex-direction: column; align-items: flex-start; gap: 16px; padding: 24px 20px; }
+      .verdict-number { font-size: 44px; }
+      .stat-hero .big { font-size: 56px; }
+      body { padding-bottom: 68px; }
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 0 16px; }
+      .nav-links { display: none; }
+      .hero-strip { padding: 36px 16px 32px; }
+      .layout { padding: 0 16px; }
+      .post-title { font-size: clamp(28px, 8vw, 48px); }
+      article { padding: 40px 0 80px; }
+      .article-cta { padding: 28px 20px; }
+      .article-cta h3 { font-size: 22px; }
+      .btn-primary { display: block; text-align: center; }
+      .btn-ghost { display: block; margin-left: 0; margin-top: 14px; text-align: center; }
+      .callout p { font-size: 16px; }
+      .stat-hero { padding: 36px 0; }
+      .stat-hero .big { font-size: 40px; }
+      .pdf-magnet { padding: 20px 16px; }
+    }
+
+    /* ── MOBILE STICKY CTA ── */
+    .mobile-sticky-cta {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 90;
+      padding: 10px 16px 14px;
+      background: rgba(17,18,20,0.97);
+      border-top: 1px solid var(--border-s);
+      backdrop-filter: blur(10px);
+    }
+    .mobile-sticky-cta a {
+      display: block;
+      background: var(--accent);
+      color: var(--white);
+      text-align: center;
+      padding: 14px 16px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 3px;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .mobile-sticky-cta a:hover { background: var(--accent-h); }
+    @media (max-width: 900px) {
+      .mobile-sticky-cta { display: block; }
     }
   </style>
 </head>
@@ -785,7 +844,7 @@
 
     <p>Traditional BI reporting teaches teams to show both values. Technically correct. Operationally inefficient.</p>
 
-    <table class="compare-table">
+    <div class="table-wrap"><table class="compare-table">
       <thead>
         <tr>
           <th>Metric</th>
@@ -800,7 +859,7 @@
           <td>88L</td>
         </tr>
       </tbody>
-    </table>
+    </table></div>
 
     <p>Because this format outsources cognition to the viewer. The executive now has to:</p>
 
@@ -1063,6 +1122,11 @@
     <a href="https://wa.me/917208526046">+91 72085 26046</a>
   </div>
 </footer>
+
+<!-- MOBILE STICKY CTA -->
+<div class="mobile-sticky-cta">
+  <a href="dashboard-decisions-guide.pdf" download>Download Free PDF →</a>
+</div>
 
 <script>
   // Active TOC highlighting
