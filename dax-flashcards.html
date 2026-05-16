@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DAX Systems · EmpoweredAI</title>
+<title>DAX Flashcards — EmpoweredAI</title>
+<meta name="description" content="80 DAX flashcards across 10 categories — Aggregation, Time Intelligence, Filter Context and more. Free interactive study tool for Power BI analysts.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="DAX Flashcards — EmpoweredAI">
+<meta property="og:description" content="80 DAX flashcards across 10 categories. Master DAX expressions for Power BI with this free interactive study tool.">
+<meta property="og:image" content="https://empoweredaiin.github.io/EmpoweredaiRepo/assets/images/empoweredai-logo.png">
+<meta property="og:url" content="https://empoweredaiin.github.io/EmpoweredaiRepo/dax-flashcards.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="DAX Flashcards — EmpoweredAI">
+<meta name="twitter:description" content="80 DAX flashcards across 10 categories. Master DAX expressions for Power BI — free.">
+<meta name="twitter:image" content="https://empoweredaiin.github.io/EmpoweredaiRepo/assets/images/empoweredai-logo.png">
+<link rel="canonical" href="https://empoweredaiin.github.io/EmpoweredaiRepo/dax-flashcards.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@300;400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="assets/images/emp_favicon.png">
 <style>
@@ -1510,8 +1523,6 @@ function renderMasteredCount() {
   let count = 0;
   categories.forEach(cat => mastered[cat].forEach(v => { if (v) count++; }));
   document.getElementById('masteredCount').textContent = count;
-  const footerEl = document.getElementById('masteredCountFooter');
-  if (footerEl) footerEl.textContent = count;
 }
 
 function render() {
