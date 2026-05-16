@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Nikhil\\\\EmpowerdAi\" -Recurse -Force | Select-Object @{Name=\"Path\";Expression={$_.FullName}}, @{Name=\"Type\";Expression={if \\($_.PSIsContainer\\) { \"Folder\" } else { [System.IO.Path]::GetExtension\\($_\\) }}}, @{Name=\"SizeBytes\";Expression={if \\($_.PSIsContainer\\) { \"-\" } else { $_.Length }}}  | Sort-Object Path)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Nikhil\\\\EmpowerdAi\" -Recurse -Force | ForEach-Object { [PSCustomObject]@{ FullPath = $_.FullName; Type = if \\($_.PSIsContainer\\) { \"Folder\" } else { $_.Extension }; SizeBytes = if \\($_.PSIsContainer\\) { \"-\" } else { $_.Length } } } | Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Nikhil\\\\EmpowerdAi\" -Recurse -Force | Where-Object { -not $_.PSIsContainer } | ForEach-Object { \"$\\($_.FullName\\) | Size: $\\($_.Length\\) bytes\" })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Nikhil\\\\EmpowerdAi\\\\PBI Workshop\\\\Retail_Profitability_sprint\\\\data\\\\live\" -Force 2>$null | ForEach-Object { \"$\\($_.FullName\\) | Type: $\\(if \\($_.PSIsContainer\\) { 'Folder' } else { $_.Extension }\\) | Size: $\\($_.Length\\) bytes\" })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Nikhil\\\\EmpowerdAi\\\\PBI Workshop\\\\Retail_Profitability_sprint\\\\pbix\\\\live\" -Force 2>$null | ForEach-Object { \"$\\($_.FullName\\) | Type: $\\(if \\($_.PSIsContainer\\) { 'Folder' } else { $_.Extension }\\) | Size: $\\($_.Length\\) bytes\" })",
+      "Bash(sitemap)",
+      "Bash(404)",
+      "Bash(500)",
+      "Bash(\\\\.htaccess\")",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Nikhil\\\\EmpowerdAi\\\\WebBase\" -File | Where-Object {$_.Name -match \"robots|sitemap|404|500|\\\\.htaccess\"}; \"---\"; Get-ChildItem -Path \"C:\\\\Users\\\\Nikhil\\\\EmpowerdAi\\\\WebBase\" -File | Select-Object Name)",
+      "PowerShell(gh auth status 2>&1)",
+      "PowerShell(git config --global credential.helper)",
+      "PowerShell(cmdkey /delete:git:https://github.com 2>&1)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git rm *)",
+      "Bash(Remove-Item -Recurse -Force \"WebBase\\\\.git\")"
+    ]
+  }
+}
