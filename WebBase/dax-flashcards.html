@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAX Systems · EmpoweredAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@300;400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/images/emp_favicon.png">
+<style>
+  :root {
+    --black: #111214;
+    --off-black: #17181b;
+    --surface: #1e1f23;
+    --card: #26272c;
+    --card-back: #161819;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.13);
+    --white: #e8e6e1;
+    --muted: #6a6870;
+    --muted2: #9a98a0;
+    --accent: #c94a2a;
+    --accent2: #e8603d;
+    --green: #6db87a;
+    --display: 'Barlow Condensed', sans-serif;
+    --body: 'Barlow', sans-serif;
+    --mono: 'Barlow Semi Condensed', sans-serif;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { height: 100%; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--body);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,8,9,0.9);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .brand-logo {
+    height: 32px;
+    width: auto;
+    display: block;
+  }
+
+  .header-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .header-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    font-weight: 600;
+  }
+
+  .header-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+
+  .front-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .card-difficulty-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(201,74,42,0.2);
+    padding: 4px 8px;
+    border-radius: 999px;
+  }
+
+  .header-right {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .header-right span { color: var(--green); font-weight: 600; }
+
+  /* ─── TABS ─── */
+  .tabs-wrapper {
+    padding: 0 40px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
+    background: var(--off-black);
+    flex-shrink: 0;
+  }
+  .tabs-wrapper::-webkit-scrollbar { display: none; }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+    width: max-content;
+  }
+
+  .tab {
+    padding: 14px 20px;
+    font-family: var(--body);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+    white-space: nowrap;
+    margin-bottom: -1px;
+  }
+
+  .tab:hover { color: var(--muted2); }
+  .tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
+
+  /* ─── PROGRESS ─── */
+  .progress-bar-wrapper {
+    padding: 12px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 1px;
+    transition: width 0.3s ease;
+  }
+
+  .progress-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    min-width: 44px;
+    text-align: right;
+  }
+
+  .why-built {
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .why-built-inner {
+    max-width: 920px;
+    margin: 0 auto;
+    display: grid;
+    gap: 12px;
+  }
+
+  .why-built-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    font-weight: 600;
+  }
+
+  .why-built h2 {
+    font-family: var(--display);
+    font-size: 24px;
+    line-height: 1.35;
+    color: var(--white);
+    max-width: 760px;
+  }
+
+  .why-built p {
+    font-size: 14px;
+    color: var(--muted2);
+    line-height: 1.8;
+    max-width: 720px;
+  }
+
+  .lead-capture {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+    gap: 24px;
+    align-items: start;
+    padding: 24px 40px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .lead-copy {
+    display: grid;
+    gap: 10px;
+  }
+
+  .lead-copy .lead-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent2);
+    font-weight: 600;
+  }
+
+  .lead-copy h2 {
+    font-family: var(--display);
+    font-size: 24px;
+    line-height: 1.35;
+    color: var(--white);
+    max-width: 620px;
+  }
+
+  .lead-copy p {
+    font-size: 14px;
+    color: var(--muted2);
+    line-height: 1.8;
+    max-width: 640px;
+  }
+
+  .lead-form {
+    display: grid;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    border-radius: 4px;
+  }
+
+  .lead-form label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .lead-form input {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 3px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.03);
+    color: var(--white);
+    font-family: var(--body);
+    font-size: 13px;
+  }
+
+  .lead-form input::placeholder {
+    color: rgba(255,255,255,0.4);
+  }
+
+  .lead-form button {
+    border: none;
+    background: var(--accent);
+    color: var(--white);
+    padding: 14px 18px;
+    font-family: var(--body);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .lead-form button:hover { background: var(--accent2); }
+
+  .library-section {
+    padding: 24px 40px;
+    background: rgba(255,255,255,0.01);
+  }
+
+  .library-header {
+    max-width: 920px;
+    margin: 0 auto 20px;
+  }
+
+  .library-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .library-section h2 {
+    font-family: var(--display);
+    font-size: 24px;
+    line-height: 1.35;
+    color: var(--white);
+    max-width: 760px;
+  }
+
+  .library-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  .library-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 18px;
+    border-radius: 4px;
+    display: grid;
+    gap: 10px;
+  }
+
+  .library-card h3 {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent2);
+  }
+
+  .library-card p {
+    font-size: 13px;
+    color: var(--muted2);
+    line-height: 1.7;
+  }
+
+  /* ─── CARD AREA ─── */
+  .card-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 24px 20px;
+  }
+
+  /* ─── FLIP CARD ─── */
+  .flip-container {
+    width: 100%;
+    max-width: 640px;
+    height: 320px;
+    perspective: 1400px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .flip-container.flipped .flip-inner {
+    transform: rotateY(180deg);
+  }
+
+  .flip-front, .flip-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 32px 40px;
+  }
+
+  .flip-front {
+    background: var(--surface);
+    justify-content: space-between;
+  }
+
+  .flip-back {
+    background: var(--card-back);
+    transform: rotateY(180deg);
+    border-color: rgba(201,74,42,0.18);
+    justify-content: flex-start;
+    gap: 0;
+  }
+
+  /* Corner marks */
+  .flip-front::before, .flip-back::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 32px; height: 32px;
+    border-top: 1px solid var(--accent);
+    border-left: 1px solid var(--accent);
+    border-radius: 3px 0 0 0;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  /* ─── FRONT FACE ─── */
+  .front-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-category-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-category-tag::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .mastered-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 4px 10px;
+    font-family: var(--body);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .mastered-btn:hover { border-color: var(--green); color: var(--green); }
+  .mastered-btn.done { border-color: var(--green); color: var(--green); background: rgba(109,184,122,0.07); }
+
+  .front-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 16px 0;
+  }
+
+  .scenario-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .scenario-text {
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--white);
+    line-height: 1.6;
+    max-width: 520px;
+  }
+
+  .scenario-text strong {
+    color: var(--accent2);
+    font-weight: 600;
+  }
+
+  .front-bottom {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── BACK FACE — 3 layers ─── */
+
+  /* Layer 1: Function name */
+  .back-function {
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .back-function-name {
+    font-family: var(--display);
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    color: var(--white);
+  }
+
+  .back-cat-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    flex-shrink: 0;
+  }
+
+  /* Layer 2: Syntax */
+  .back-syntax-wrap {
+    margin-bottom: 18px;
+  }
+
+  .back-syntax-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .back-syntax {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--green);
+    background: rgba(109,184,122,0.05);
+    border: 1px solid rgba(109,184,122,0.12);
+    border-radius: 2px;
+    padding: 10px 14px;
+    word-break: break-all;
+    line-height: 1.65;
+    letter-spacing: 0.02em;
+  }
+
+  /* Layer 3: Explanation — 2 parts */
+  .back-explanation {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+  }
+
+  .back-exp-part {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .back-exp-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .back-exp-label.usecase { color: var(--accent2); }
+
+  .back-exp-text {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--muted2);
+    line-height: 1.55;
+  }
+
+  .back-exp-text.usecase {
+    color: var(--white);
+    font-weight: 400;
+  }
+
+  .back-hint {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-top: auto;
+    padding-top: 12px;
+    text-align: right;
+  }
+
+  /* ─── DOTS ─── */
+  .dot-row {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 640px;
+    margin: 16px auto 0;
+    padding: 0 24px;
+  }
+
+  .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .dot:hover { background: var(--border-strong); }
+  .dot.current { background: var(--accent); transform: scale(1.5); }
+  .dot.done { background: var(--green); }
+
+  /* ─── NAV ─── */
+  .nav-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 40px 16px;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .nav-btn {
+    padding: 10px 28px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted2);
+    font-family: var(--body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .nav-btn:hover { border-color: var(--border-strong); color: var(--white); }
+  .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+  .nav-btn.flip-btn {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--white);
+    padding: 10px 44px;
+  }
+  .nav-btn.flip-btn:hover { background: var(--accent2); border-color: var(--accent2); }
+
+  /* ─── KEYBOARD HINT ─── */
+  .keyboard-hint {
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--mono);
+    padding-bottom: 16px;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+
+  kbd {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--white);
+  }
+
+  /* ─── CTA STRIP ─── */
+  .cta-strip {
+    border-top: 1px solid var(--border);
+    background: var(--off-black);
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+
+  .cta-strip-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .cta-strip-line1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 0.01em;
+  }
+
+  .cta-strip-line2 {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--muted);
+  }
+
+  .cta-strip-btn {
+    background: var(--accent);
+    color: var(--white);
+    font-family: var(--body);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 11px 28px;
+    border-radius: 2px;
+    text-decoration: none;
+    transition: background 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .cta-strip-btn:hover { background: var(--accent2); }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .footer-brand {
+    font-family: var(--body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .footer-brand strong { color: var(--white); }
+
+  .footer-mastered {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .footer-mastered span { color: var(--green); font-weight: 600; }
+
+  .footer-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin: 8px 0;
+  }
+
+  .footer-meta a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .footer-meta a:hover {
+    color: var(--white);
+  }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 480px) {
+    header { padding: 14px 20px; }
+    .header-center { display: none; }
+    .tabs-wrapper { padding: 0 20px; }
+    .tab { padding: 12px 14px; font-size: 10px; }
+    .progress-bar-wrapper { padding: 10px 20px; }
+    .card-area { padding: 20px 16px 12px; }
+
+    .flip-container { height: 500px; }
+    .flip-front, .flip-back { padding: 24px 20px; }
+    .flip-back { overflow-y: auto; }
+    .scenario-text { font-size: 16px; line-height: 1.75; }
+    .back-function-name { font-size: 36px; }
+    .back-syntax { font-size: 12px; }
+    .back-explanation { flex-direction: column; gap: 16px; }
+    .back-exp-text { font-size: 13px; line-height: 1.85; }
+
+    .nav-row { padding: 14px 20px 10px; gap: 6px; }
+    .nav-btn { padding: 9px 18px; font-size: 11px; }
+    .nav-btn.flip-btn { padding: 9px 30px; }
+
+    .lead-capture { grid-template-columns: 1fr; padding: 20px; }
+    .library-section { padding: 20px; }
+    .library-grid { grid-template-columns: 1fr; }
+    .lead-form { width: 100%; }
+
+    .cta-strip { padding: 20px; flex-direction: column; align-items: flex-start; gap: 14px; }
+    .cta-strip-btn { width: 100%; text-align: center; padding: 13px; }
+
+    footer { padding: 12px 20px; }
+    .keyboard-hint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header>
+  <a href="index.html" class="logo">
+    <img src="assets/images/empoweredai-logo.png" alt="EmpoweredAI" class="brand-logo">
+  </a>
+  <div class="header-center">
+    <div class="header-title">Decision Systems Library</div>
+    <div class="header-sub">Built by EMPOWEREDAI · Used in our BI workshops</div>
+  </div>
+  <div class="header-right">Done: <span id="masteredCount">0</span></div>
+</header>
+
+<section class="why-built">
+  <div class="why-built-inner">
+    <div class="why-built-label">Why we built this</div>
+    <h2>Most DAX references teach syntax. This system teaches business reasoning through operational scenarios.</h2>
+    <p>It is designed for analysts and decision teams who need a reasoning-first reference. Each scenario links DAX to real BI workflows, not just formula memorization.</p>
+  </div>
+</section>
+
+<!-- ─── TABS ─── -->
+<div class="tabs-wrapper">
+  <div class="tabs" id="tabs"></div>
+</div>
+
+<!-- ─── PROGRESS ─── -->
+<div class="progress-bar-wrapper">
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">0 / 0</div>
+</div>
+
+<!-- ─── CARD ─── -->
+<div class="card-area">
+  <div class="flip-container" id="flipCard">
+    <div class="flip-inner">
+
+      <!-- FRONT -->
+      <div class="flip-front">
+        <div class="front-top">
+          <div class="front-tags">
+            <div class="card-difficulty-tag" id="frontLevel"></div>
+            <div class="card-category-tag" id="frontCategory"></div>
+          </div>
+          <button class="mastered-btn" id="masteredBtn" onclick="toggleMastered(event)">✓ Got it</button>
+        </div>
+        <div class="front-body">
+          <div class="scenario-label">Scenario</div>
+          <div class="scenario-text" id="frontScenario"></div>
+        </div>
+        <div class="front-bottom">Think first → then reveal</div>
+      </div>
+
+      <!-- BACK -->
+      <div class="flip-back">
+        <!-- Layer 1: Function name -->
+        <div class="back-function">
+          <div class="back-function-name" id="backName"></div>
+          <div class="back-cat-tag" id="backCategory"></div>
+        </div>
+        <!-- Layer 2: Syntax -->
+        <div class="back-syntax-wrap">
+          <div class="back-syntax-label">Syntax</div>
+          <div class="back-syntax" id="backSyntax"></div>
+        </div>
+        <!-- Layer 3: Explanation -->
+        <div class="back-explanation">
+          <div class="back-exp-part">
+            <div class="back-exp-label">What it does</div>
+            <div class="back-exp-text" id="backWhat"></div>
+          </div>
+          <div class="back-exp-part">
+            <div class="back-exp-label usecase">↳ Use when</div>
+            <div class="back-exp-text usecase" id="backUse"></div>
+          </div>
+        </div>
+        <div class="back-hint">Got it? Move on →</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="dot-row" id="dotRow"></div>
+
+<div class="nav-row">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">← Prev</button>
+  <button class="nav-btn flip-btn" onclick="flipCard()">Reveal</button>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Next →</button>
+</div>
+
+<div class="keyboard-hint">
+  <kbd>←</kbd> <kbd>→</kbd> navigate &nbsp;·&nbsp; <kbd>Space</kbd> reveal &nbsp;·&nbsp; <kbd>M</kbd> mark done
+</div>
+
+<!-- ─── CTA STRIP ─── -->
+<div class="cta-strip">
+  <div class="cta-strip-text">
+    <div class="cta-strip-line1">You've seen the functions. Now use them on real data.</div>
+    <div class="cta-strip-line2">A BI sprint built for business reasoning and operational teams.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end;flex-shrink:0;">
+    <a href="mailto:nikhil@kravon.in?subject=Explore%20the%20BI%20Sprint" class="cta-strip-btn">Explore the BI Sprint</a>
+    <a href="dashboard-decisions-guide.pdf" download class="cta-strip-btn" style="background:transparent;border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.7);font-size:10px;padding:9px 20px;">Download Free PDF →</a>
+  </div>
+</div>
+
+<section class="library-section">
+  <div class="library-header">
+    <div class="library-label">Decision Systems Library</div>
+    <h2>From DAX systems to KPI frameworks, this is the start of a broader operational BI reference.</h2>
+  </div>
+  <div class="library-grid">
+    <div class="library-card">
+      <h3>DAX systems</h3>
+      <p>Patterns and reusable formula structures for modern analytics teams.</p>
+    </div>
+    <div class="library-card">
+      <h3>KPI frameworks</h3>
+      <p>Decision-aligned metrics and reporting logic built around business outcomes.</p>
+    </div>
+    <div class="library-card">
+      <h3>Dashboard systems</h3>
+      <p>Practical structures that guide executives and operators through the same story.</p>
+    </div>
+    <div class="library-card">
+      <h3>Reporting logic</h3>
+      <p>Clear rules for when a measure is meaningful and when it is just noise.</p>
+    </div>
+    <div class="library-card">
+      <h3>Prompt frameworks</h3>
+      <p>Business-focused prompts for analytics, summaries and data storyboarding.</p>
+    </div>
+  </div>
+</section>
+
+<section class="lead-capture">
+  <div class="lead-copy">
+    <div class="lead-tag">Save progress</div>
+    <h2>Request the full reference sheet and the complete DAX systems library.</h2>
+    <p>Leave your work email for a compact guide that supports your BI sprint and teams working with decision systems.</p>
+  </div>
+  <form class="lead-form" action="mailto:nikhil@kravon.in?subject=Request%20DAX%20System%20Library" method="get" enctype="text/plain">
+    <label for="leadName">Name</label>
+    <input id="leadName" name="name" type="text" placeholder="Your name" required>
+    <label for="leadEmail">Work email</label>
+    <input id="leadEmail" name="email" type="email" placeholder="you@company.com" required>
+    <label for="leadCompany">Company</label>
+    <input id="leadCompany" name="company" type="text" placeholder="Company name" required>
+    <button type="submit">Request the guide</button>
+  </form>
+</section>
+
+<footer>
+  <div class="footer-brand"><img src="assets/images/empoweredai-logo.png" alt="EmpoweredAI" class="brand-logo"></div>
+  <div class="footer-meta">
+    <a href="https://studios.kravon.in" target="_blank" rel="noopener">KravonStudios™</a> ·
+    <a href="mailto:nikhil@kravon.in">nikhil@kravon.in</a> ·
+    <a href="https://wa.me/917208526046">+91 72085 26046</a>
+  </div>
+</footer>
+
+<script>
+const data = {
+  "Aggregation Logic": [
+    {
+      scenario: "You need to calculate <strong>revenue row-by-row</strong> (Qty × Price) before summing across all rows. What do you use?",
+      name: "SUMX",
+      syntax: "SUMX(Sales, Sales[Qty] * Sales[Price])",
+      what: "Iterates a table row by row, evaluates an expression at each row, then sums the results.",
+      use: "Any time you need row-level calculation before aggregating. CALCULATE + SUM won't work here."
+    },
+    {
+      scenario: "You need to find the <strong>average deal size</strong> across all closed opportunities. What function handles this directly?",
+      name: "AVERAGE",
+      syntax: "AVERAGE('Table'[Column])",
+      what: "Returns the arithmetic mean of a numeric column. Ignores blank cells.",
+      use: "Quick column-level averages. For row-level expressions before averaging, use AVERAGEX."
+    },
+    {
+      scenario: "Your dashboard needs to display the <strong>earliest and latest order date</strong> in the dataset. What do you use?",
+      name: "MIN / MAX",
+      syntax: "MIN('Table'[Column])\nMAX('Table'[Column])",
+      what: "Returns the smallest or largest value in a column or between two scalar expressions.",
+      use: "Date range labels, threshold comparisons, KPI boundary markers."
+    },
+    {
+      scenario: "A financial metric is showing too many decimals. You need to <strong>round to 2 decimal places</strong> for display. What function?",
+      name: "ROUND",
+      syntax: "ROUND('Table'[Number], 2)",
+      what: "Rounds a number to the specified number of decimal places.",
+      use: "Cleaning display values in measures. Use 0 for whole numbers, -2 to round to hundreds."
+    },
+    {
+      scenario: "You're calculating budget variance and need the <strong>positive version of a negative number</strong>. What do you use?",
+      name: "ABS",
+      syntax: "ABS('Table'[Number])",
+      what: "Returns the absolute (non-negative) value of a number.",
+      use: "Variance calculations where direction doesn't matter — only magnitude does."
+    },
+  ],
+  "Text Ops": [
+    {
+      scenario: "You need to <strong>combine first name and last name</strong> from two columns into a single display field. What function?",
+      name: "CONCATENATE",
+      syntax: 'CONCATENATE("Hello ", "World")',
+      what: "Joins two text strings into one.",
+      use: "Merging two text fields. For more than two, use the & operator or CONCATENATEX for table iteration."
+    },
+    {
+      scenario: "Product codes are stored as full strings. You need to <strong>extract just the first 3 characters</strong> to get the category prefix. What do you use?",
+      name: "LEFT / RIGHT",
+      syntax: "LEFT('Table'[Text], 3)\nRIGHT('Table'[Text], 5)",
+      what: "Extracts N characters from the start or end of a text string.",
+      use: "Parsing structured codes, SKUs, region prefixes, or date strings stored as text."
+    },
+    {
+      scenario: "You need to <strong>validate that a text field isn't too long</strong> for a report column. What checks the character count?",
+      name: "LEN",
+      syntax: "LEN('Table'[Text])",
+      what: "Returns the number of characters in a text string.",
+      use: "Data validation, conditional formatting based on field length, text quality checks."
+    },
+    {
+      scenario: "Some customer names were entered with <strong>extra spaces</strong>, breaking your filters. What function cleans this?",
+      name: "TRIM",
+      syntax: "TRIM('Table'[Text])",
+      what: "Removes leading and trailing spaces, reduces internal spaces to one.",
+      use: "Data cleaning before filtering or grouping on text columns with inconsistent entry."
+    },
+    {
+      scenario: "You want to <strong>flag all transactions from a specific region</strong> where the region field contains a keyword like 'North'. What do you use?",
+      name: "CONTAINSSTRING",
+      syntax: 'CONTAINSSTRING(\'Table\'[Text], "keyword")',
+      what: "Returns TRUE if a text string contains a given substring. Case-insensitive.",
+      use: "Filtering or flagging rows based on partial text match. Cleaner than SEARCH for boolean checks."
+    },
+    {
+      scenario: "You need to find <strong>where a keyword appears</strong> in a description column to extract a segment of text. What returns the position?",
+      name: "SEARCH",
+      syntax: 'SEARCH("keyword", \'Table\'[Text])',
+      what: "Returns the character position of a substring within a string. Errors if not found.",
+      use: "Position-based text extraction. Always wrap in IFERROR to handle rows where the keyword is absent."
+    },
+  ],
+  "Date Logic": [
+    {
+      scenario: "You need a measure that shows <strong>how many days have passed since today</strong> for each open task. What combination do you use?",
+      name: "TODAY / NOW",
+      syntax: "TODAY()\nNOW()",
+      what: "TODAY() returns the current date. NOW() returns date and time. Both recalculate on each refresh.",
+      use: "Age calculations, overdue flags, time-since-event metrics. TODAY() for date-only, NOW() when time matters."
+    },
+    {
+      scenario: "Your date column contains full date values but you need to <strong>group data by year and month</strong> separately. What functions extract these?",
+      name: "YEAR / MONTH / DAY",
+      syntax: "YEAR('Table'[Date])\nMONTH('Table'[Date])",
+      what: "Extracts the numeric year, month (1–12), or day (1–31) from a date value.",
+      use: "Creating calculated columns for year/month grouping when a proper date table isn't available."
+    },
+    {
+      scenario: "You need to calculate the <strong>number of days between contract start and end dates</strong>. What function handles this cleanly?",
+      name: "DATEDIFF",
+      syntax: "DATEDIFF('Table'[Start], 'Table'[End], DAY)",
+      what: "Returns the difference between two dates in the specified unit: DAY, MONTH, YEAR, QUARTER, etc.",
+      use: "Contract duration, age, SLA breach detection, days-to-close calculations."
+    },
+    {
+      scenario: "You need to calculate a <strong>month-end balance</strong> — the value as of the last day of each month. What function gives you that boundary date?",
+      name: "EOMONTH",
+      syntax: "EOMONTH('Table'[Date], 0)",
+      what: "Returns the last day of the month for the given date. Use 1 for next month, -1 for previous.",
+      use: "Month-end snapshots, invoicing cutoffs, rolling window calculations."
+    },
+    {
+      scenario: "A stakeholder wants <strong>dates displayed as 'Jan 2024'</strong> in a table visual. What function converts the date column to this format?",
+      name: "FORMAT",
+      syntax: 'FORMAT(\'Table\'[Date], "MMM YYYY")',
+      what: "Converts a date or number to a formatted text string using pattern codes.",
+      use: "Display formatting in visuals. Returns a string — never use the output in numeric calculations."
+    },
+  ],
+  "Time-Based Analysis": [
+    {
+      scenario: "Your revenue visual needs to show <strong>cumulative sales from January 1st to the current date</strong>, resetting each year. What do you use?",
+      name: "TOTALYTD",
+      syntax: "TOTALYTD(SUM('Table'[Sales]), 'Date'[Date])",
+      what: "Calculates a cumulative value from the start of the year to the current date in filter context.",
+      use: "YTD revenue, YTD headcount, running totals that reset annually. Requires a marked Date table."
+    },
+    {
+      scenario: "The CFO wants to compare <strong>this month's revenue against the same month last year</strong>. What function shifts the date context back 12 months?",
+      name: "SAMEPERIODLASTYEAR",
+      syntax: "CALCULATE([Revenue], SAMEPERIODLASTYEAR('Date'[Date]))",
+      what: "Returns the equivalent date period from the prior year within the current filter context.",
+      use: "YoY comparisons. Always the cleaner choice over manually subtracting 12 months."
+    },
+    {
+      scenario: "You need a measure showing <strong>cumulative sales from the 1st of the current month</strong> to whatever date is selected. What do you use?",
+      name: "TOTALMTD",
+      syntax: "TOTALMTD(SUM('Table'[Sales]), 'Date'[Date])",
+      what: "Calculates a cumulative value from the start of the current month to the selected date.",
+      use: "Month-to-date tracking for actuals vs targets. Works alongside TOTALYTD and TOTALQTD."
+    },
+    {
+      scenario: "You need to filter a calculation to a <strong>specific date range — say, all of FY2023</strong>. What function creates that date filter?",
+      name: "DATESBETWEEN",
+      syntax: "DATESBETWEEN('Date'[Date], DATE(2023,4,1), DATE(2024,3,31))",
+      what: "Returns a single-column table of dates between two boundary dates.",
+      use: "Custom fiscal year windows, ad hoc period comparisons. Use inside CALCULATE as a filter."
+    },
+    {
+      scenario: "Your rolling window measure needs to know the <strong>very first and last date in the current filter context</strong>. What do you use?",
+      name: "FIRSTDATE / LASTDATE",
+      syntax: "FIRSTDATE('Date'[Date])\nLASTDATE('Date'[Date])",
+      what: "Returns the first or last date value present in the current filter context.",
+      use: "Anchoring calculations to the visible date range. Essential in rolling averages and period-over-period logic."
+    },
+  ],
+  "Statistical": [
+    {
+      scenario: "You need to <strong>count how many deals were closed</strong> in a column that contains numeric deal IDs. What function?",
+      name: "COUNT / COUNTA",
+      syntax: "COUNT('Table'[Column])\nCOUNTA('Table'[Column])",
+      what: "COUNT counts numeric cells only. COUNTA counts all non-blank cells, including text.",
+      use: "Row volume metrics. Use COUNTA when your ID or status column contains text."
+    },
+    {
+      scenario: "You need the <strong>average profit margin across all products</strong>, where margin is calculated per row (Revenue − Cost / Revenue). What do you use?",
+      name: "AVERAGEX",
+      syntax: "AVERAGEX('Table', 'Table'[Revenue] - 'Table'[Cost])",
+      what: "Iterates a table row by row, evaluates an expression per row, then returns the average of results.",
+      use: "Row-level averages where the value doesn't exist as a stored column. Same iterator pattern as SUMX."
+    },
+    {
+      scenario: "Your data science team wants to understand <strong>how spread out sales rep performance is</strong> across the whole team. What gives you this?",
+      name: "STDEV.P",
+      syntax: "STDEV.P('Table'[Column])",
+      what: "Returns the population standard deviation of a numeric column.",
+      use: "Performance distribution analysis. Use STDEV.S when working with a sample, not the full population."
+    },
+    {
+      scenario: "You need to identify <strong>which deals fall in the top 25% by deal size</strong>. What function finds the boundary value?",
+      name: "PERCENTILE.INC",
+      syntax: "PERCENTILE.INC('Table'[Values], 0.75)",
+      what: "Returns the value at the k-th percentile across a column. INC includes the boundary values.",
+      use: "Segmenting data into performance tiers. Use 0.5 for median, 0.9 for top 10% threshold."
+    },
+  ],
+  "Logical": [
+    {
+      scenario: "You need a column that labels each deal <strong>'High' if value > ₹10L, 'Low' otherwise</strong>. What function handles this branch?",
+      name: "IF",
+      syntax: 'IF(\'Table\'[Value] > 1000000, "High", "Low")',
+      what: "Evaluates a condition and returns one value if TRUE, another if FALSE.",
+      use: "Simple binary classifications. Nestable for multiple conditions, but prefer SWITCH beyond 2–3 levels."
+    },
+    {
+      scenario: "You need to assign a <strong>numeric tier to each customer segment</strong> — 'Enterprise' = 3, 'Mid-Market' = 2, 'SMB' = 1. What's cleaner than nested IFs?",
+      name: "SWITCH",
+      syntax: 'SWITCH(\'Table\'[Segment], "Enterprise", 3, "Mid-Market", 2, 1)',
+      what: "Evaluates an expression against a list of values and returns the matching result.",
+      use: "Multi-branch classification. The last argument is the default/else value. Significantly cleaner than nested IF."
+    },
+    {
+      scenario: "Your filter logic requires a row to meet <strong>two conditions simultaneously</strong> — active account AND deal value above threshold. What function?",
+      name: "AND / OR",
+      syntax: "AND(condition1, condition2)\nOR(condition1, condition2)",
+      what: "Evaluates two logical conditions. AND requires both TRUE; OR requires at least one TRUE.",
+      use: "Compound filter logic in calculated columns or measures. Also valid as && and || inline operators."
+    },
+    {
+      scenario: "A DIVIDE expression is returning errors on rows where the denominator is zero. You need it to <strong>return 0 instead of erroring</strong>. What wraps it?",
+      name: "IFERROR",
+      syntax: 'IFERROR(DIVIDE([Revenue], [Units]), 0)',
+      what: "Returns an alternate value if the expression throws any error.",
+      use: "Defensive wrapping around DIVIDE, SEARCH, or RELATED where errors are expected. Don't over-use — errors often signal data problems worth fixing."
+    },
+  ],
+  "Context Control": [
+    {
+      scenario: "Your measure needs to <strong>calculate sales only for the 'North' region</strong>, regardless of what filter is active on the visual. What function overrides the filter context?",
+      name: "CALCULATE",
+      syntax: "CALCULATE(SUM('Table'[Sales]), 'Table'[Region]=\"North\")",
+      what: "Evaluates an expression after modifying the current filter context with specified filters.",
+      use: "The foundation of most advanced DAX. Use whenever you need to override, add, or remove filters from a measure."
+    },
+    {
+      scenario: "You need a measure showing <strong>each region's % share of total revenue</strong>. The denominator must ignore the region filter. What removes that filter?",
+      name: "ALL",
+      syntax: "CALCULATE(SUM('Table'[Sales]), ALL('Table'[Region]))",
+      what: "Removes all filters from a table or specified columns within CALCULATE.",
+      use: "% of total calculations. Pass a column to remove only that filter; pass a table to clear all filters on it."
+    },
+    {
+      scenario: "You want % of total that <strong>respects page-level slicers but ignores the row filter inside the visual</strong>. What do you use instead of ALL?",
+      name: "ALLSELECTED",
+      syntax: "ALLSELECTED('Table'[Region])",
+      what: "Removes filters applied inside the current visual, but preserves filters from slicers and page-level filters.",
+      use: "% of filtered total — shows share within whatever the user has sliced, not against the full dataset."
+    },
+    {
+      scenario: "You want to filter to 'Category A' inside CALCULATE, but also <strong>keep any existing category filter active</strong> — intersect them, not replace. What do you use?",
+      name: "KEEPFILTERS",
+      syntax: "CALCULATE([Sales], KEEPFILTERS('Table'[Cat]=\"A\"))",
+      what: "Adds a filter to the context instead of overriding existing filters. Returns the intersection.",
+      use: "When you want to narrow, not replace, existing filter context. Critical for correct % calculations in filtered visuals."
+    },
+    {
+      scenario: "Your model has an <strong>inactive relationship</strong> between tables. You need to activate it just for one specific measure. What do you use?",
+      name: "USERELATIONSHIP",
+      syntax: "USERELATIONSHIP('Orders'[ShipDate], 'Date'[Date])",
+      what: "Activates an inactive relationship for the scope of the enclosing CALCULATE expression.",
+      use: "Role-playing dimensions — e.g., a single Date table used for both OrderDate and ShipDate."
+    },
+  ],
+  "Table Transformations": [
+    {
+      scenario: "You need to <strong>summarise total sales per region</strong> into a new table — one row per region with an aggregated revenue column. What function does this?",
+      name: "SUMMARIZE",
+      syntax: "SUMMARIZE('Sales', 'Sales'[Region], \"Revenue\", SUM('Sales'[Amount]))",
+      what: "Groups a table by specified columns and returns an aggregated summary table.",
+      use: "Building virtual summary tables inside measures or calculated tables. Like SQL GROUP BY."
+    },
+    {
+      scenario: "You want to <strong>add a calculated Revenue column</strong> (Qty × Price) to an existing table expression without modifying the source. What function?",
+      name: "ADDCOLUMNS",
+      syntax: "ADDCOLUMNS('Table', \"Revenue\", [Qty] * [Price])",
+      what: "Returns a new table with all original columns plus additional calculated columns appended.",
+      use: "Enriching table expressions inside measures or calculated tables. Non-destructive — source table is unchanged."
+    },
+    {
+      scenario: "A table function is returning too many columns. You need to <strong>pass only specific columns downstream</strong> to reduce noise. What slims it down?",
+      name: "SELECTCOLUMNS",
+      syntax: "SELECTCOLUMNS('Table', \"Name\", 'Table'[Name], \"Rev\", 'Table'[Revenue])",
+      what: "Returns a new table containing only the specified columns.",
+      use: "Reducing table width before passing into other functions. Useful for clean SUMMARIZE inputs."
+    },
+    {
+      scenario: "Your visual needs to show only the <strong>top 5 products by revenue</strong>. What function returns those rows?",
+      name: "TOPN",
+      syntax: "TOPN(5, 'Table', 'Table'[Revenue], DESC)",
+      what: "Returns the top N rows of a table ranked by a specified expression.",
+      use: "Top/bottom leaderboards, filtered table inputs. Use inside CALCULATE or SUMX for aggregating the top N."
+    },
+  ],
+  "Filter Context": [
+    {
+      scenario: "You're in a nested iterator and need to <strong>reference a value from the outer row context</strong> inside the inner loop. What gives you access to it?",
+      name: "EARLIER",
+      syntax: "CALCULATE([Sales], 'Table'[Date] = EARLIER('Table'[Date]) - 1)",
+      what: "References the row context one level up in a nested iteration.",
+      use: "Running totals or row comparisons inside nested SUMX / ADDCOLUMNS. In modern DAX, VAR is usually cleaner."
+    },
+    {
+      scenario: "You want to display <strong>which filter values are currently active</strong> on a column — for a dynamic label or debugging. What returns that list?",
+      name: "FILTERS",
+      syntax: "FILTERS('Table'[Category])",
+      what: "Returns a single-column table of values currently filtering the specified column.",
+      use: "Dynamic labels, debugging filter context, building conditional logic based on what the user has selected."
+    },
+    {
+      scenario: "You want your measure to behave differently depending on <strong>whether the user has applied a filter to a specific column</strong>. What detects this?",
+      name: "ISFILTERED",
+      syntax: 'IF(ISFILTERED(\'Table\'[Column]), "Filtered", "All")',
+      what: "Returns TRUE if a direct filter is currently applied to the specified column.",
+      use: "Conditional measure logic — show totals vs breakdowns, dynamic titles, adaptive display based on slicer state."
+    },
+  ],
+  "Ranking": [
+    {
+      scenario: "You need to <strong>rank every sales rep by revenue</strong> within the current filter context, with the highest earner ranked #1. What function handles this?",
+      name: "RANKX",
+      syntax: "RANKX(ALL('Reps'), [Revenue], , DESC)",
+      what: "Ranks each row in a table by evaluating an expression, handling ties correctly.",
+      use: "Leaderboards, performance tiers, conditional formatting based on rank. Always wrap the table in ALL or ALLSELECTED to control scope."
+    },
+    {
+      scenario: "You have a column of deal values and need to know <strong>what rank a specific deal holds</strong> among all values in that column. What do you use?",
+      name: "RANK.EQ",
+      syntax: "RANK.EQ('Table'[Value], 'Table'[Value], DESC)",
+      what: "Returns the rank of a specific value within a column. Ties receive the same rank.",
+      use: "Static column-level ranking. Less flexible than RANKX but simpler for straightforward column comparisons."
+    },
+  ],
+};
+
+const categoryLevels = {
+  "Aggregation Logic": "Foundation",
+  "Text Ops": "Foundation",
+  "Logical": "Foundation",
+  "Date Logic": "Intermediate",
+  "Time-Based Analysis": "Intermediate",
+  "Statistical": "Intermediate",
+  "Context Control": "Advanced",
+  "Table Transformations": "Advanced",
+  "Filter Context": "Advanced",
+  "Ranking": "Advanced"
+};
+
+const categories = Object.keys(data);
+let currentCat = categories[0];
+let currentIndex = 0;
+let isFlipped = false;
+let mastered = {};
+
+function initMastered() {
+  categories.forEach(cat => {
+    mastered[cat] = new Array(data[cat].length).fill(false);
+  });
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (cat === currentCat ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = () => { currentCat = cat; currentIndex = 0; isFlipped = false; render(); };
+    tabs.appendChild(btn);
+  });
+}
+
+function renderCard() {
+  const cards = data[currentCat];
+  const card = cards[currentIndex];
+  const flipEl = document.getElementById('flipCard');
+
+  flipEl.classList.toggle('flipped', isFlipped);
+
+  document.getElementById('frontCategory').textContent = currentCat;
+  document.getElementById('frontLevel').textContent = categoryLevels[currentCat] || 'Foundation';
+  document.getElementById('frontScenario').innerHTML = card.scenario;
+  document.getElementById('backName').textContent = card.name;
+  document.getElementById('backCategory').textContent = currentCat;
+  document.getElementById('backSyntax').textContent = card.syntax;
+  document.getElementById('backWhat').textContent = card.what;
+  document.getElementById('backUse').textContent = card.use;
+
+  const btn = document.getElementById('masteredBtn');
+  btn.classList.toggle('done', mastered[currentCat][currentIndex]);
+  btn.textContent = mastered[currentCat][currentIndex] ? '✓ Done' : '✓ Got it';
+
+  document.getElementById('prevBtn').disabled = currentIndex === 0;
+  document.getElementById('nextBtn').disabled = currentIndex === cards.length - 1;
+}
+
+function renderProgress() {
+  const cards = data[currentCat];
+  const pct = ((currentIndex + 1) / cards.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${currentIndex + 1} / ${cards.length}`;
+}
+
+function renderDots() {
+  const cards = data[currentCat];
+  const row = document.getElementById('dotRow');
+  row.innerHTML = '';
+  cards.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === currentIndex ? ' current' : '') + (mastered[currentCat][i] ? ' done' : '');
+    dot.onclick = () => { currentIndex = i; isFlipped = false; render(); };
+    row.appendChild(dot);
+  });
+}
+
+function renderMasteredCount() {
+  let count = 0;
+  categories.forEach(cat => mastered[cat].forEach(v => { if (v) count++; }));
+  document.getElementById('masteredCount').textContent = count;
+  const footerEl = document.getElementById('masteredCountFooter');
+  if (footerEl) footerEl.textContent = count;
+}
+
+function render() {
+  renderTabs();
+  renderCard();
+  renderProgress();
+  renderDots();
+  renderMasteredCount();
+}
+
+function flipCard() {
+  isFlipped = !isFlipped;
+  document.getElementById('flipCard').classList.toggle('flipped', isFlipped);
+}
+
+function navigate(dir) {
+  const cards = data[currentCat];
+  const next = currentIndex + dir;
+  if (next >= 0 && next < cards.length) {
+    currentIndex = next;
+    isFlipped = false;
+    render();
+  }
+}
+
+function toggleMastered(e) {
+  e.stopPropagation();
+  mastered[currentCat][currentIndex] = !mastered[currentCat][currentIndex];
+  render();
+}
+
+document.getElementById('flipCard').addEventListener('click', flipCard);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') navigate(1);
+  else if (e.key === 'ArrowLeft') navigate(-1);
+  else if (e.key === ' ') { e.preventDefault(); flipCard(); }
+  else if (e.key === 'm' || e.key === 'M') {
+    mastered[currentCat][currentIndex] = !mastered[currentCat][currentIndex];
+    render();
+  }
+});
+
+initMastered();
+render();
+</script>
+</body>
+</html>
