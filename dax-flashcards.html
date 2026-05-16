@@ -530,48 +530,7 @@
     font-size: 10px;
     color: var(--muted);
     letter-spacing: 0.1em;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
   }
-
-  .hint-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  .hint-btn {
-    background: rgba(255,255,255,0.07);
-    border: 1px solid var(--border-strong);
-    border-radius: 999px;
-    padding: 3px 10px;
-    font-family: var(--mono);
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted2);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .hint-btn:hover { background: rgba(255,255,255,0.12); color: var(--white); }
-
-  .hint-reveal {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--accent2);
-    letter-spacing: 0.06em;
-    opacity: 0;
-    max-width: 0;
-    overflow: hidden;
-    transition: opacity 0.2s, max-width 0.25s;
-    white-space: nowrap;
-  }
-  .hint-reveal.visible { opacity: 1; max-width: 180px; }
 
   /* ─── BACK FACE — 3 layers ─── */
 
@@ -890,6 +849,73 @@
     footer { padding: 12px 20px; }
     .keyboard-hint { display: none; }
   }
+
+  /* ─── HAMBURGER & DRAWER ─── */
+  .nav-hamburger {
+    display: none; flex-direction: column; gap: 5px;
+    cursor: pointer; padding: 4px; background: none; border: none; flex-shrink: 0;
+  }
+  .nav-hamburger span {
+    display: block; width: 22px; height: 2px;
+    background: var(--white); transition: all 0.25s;
+  }
+  .nav-drawer {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: var(--black); flex-direction: column;
+    padding: 80px 32px 40px; gap: 0;
+  }
+  .nav-drawer.open { display: flex; }
+  .nav-drawer a {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 42px;
+    letter-spacing: 0.04em; color: var(--white); text-decoration: none;
+    padding: 12px 0; border-bottom: 1px solid var(--border); transition: color 0.15s;
+  }
+  .nav-drawer a:hover { color: var(--accent2); }
+  .nav-drawer-cta {
+    margin-top: 32px; background: var(--accent) !important; color: #fff !important;
+    padding: 18px 32px !important; font-size: 18px !important;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    text-decoration: none; text-align: center; display: block; border: none !important;
+  }
+  .drawer-close {
+    position: absolute; top: 20px; right: 24px;
+    font-size: 32px; cursor: pointer; background: none; border: none;
+    color: var(--white); line-height: 1;
+  }
+  @media (max-width: 640px) {
+    .nav-hamburger { display: flex; }
+    .header-right { display: none; }
+    .header-center { display: none; }
+  }
+
+  /* ─── MOBILE STICKY CTA ─── */
+  .mobile-cta-bar {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0;
+    z-index: 90; padding: 10px 16px 14px;
+    background: rgba(8,8,9,0.97); border-top: 1px solid var(--border-strong);
+    backdrop-filter: blur(12px);
+  }
+  .mobile-cta-inner { display: flex; gap: 10px; }
+  .mobile-primary {
+    flex: 1; display: block; background: var(--accent); color: var(--white);
+    text-align: center; padding: 14px; font-family: var(--body);
+    font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; text-decoration: none;
+    border-radius: 2px; white-space: nowrap; transition: background 0.15s;
+  }
+  .mobile-primary:hover { background: var(--accent2); }
+  .mobile-secondary {
+    flex: 1; display: block; color: rgba(255,255,255,0.65);
+    text-align: center; padding: 13px; font-family: var(--body);
+    font-size: 12px; font-weight: 500; letter-spacing: 0.06em;
+    text-decoration: none; border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 2px; white-space: nowrap;
+  }
+  .mobile-secondary:hover { color: var(--white); }
+  @media (max-width: 640px) {
+    .mobile-cta-bar { display: block; }
+    body { padding-bottom: 72px; }
+  }
 </style>
 </head>
 <body>
@@ -904,7 +930,18 @@
     <div class="header-sub">Built by EMPOWEREDAI · Used in our BI workshops</div>
   </div>
   <div class="header-right">Done: <span id="masteredCount">0</span></div>
+  <button class="nav-hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
 </header>
+
+<div class="nav-drawer" id="nav-drawer">
+  <button class="drawer-close" id="drawer-close" aria-label="Close menu">×</button>
+  <a href="index.html" onclick="closeDrawer()">Home</a>
+  <a href="why-dashboards-fail.html" onclick="closeDrawer()">Blog</a>
+  <a href="dashboard-decisions-guide.pdf" download onclick="closeDrawer()">Download PDF</a>
+  <a href="index.html#final-cta" class="nav-drawer-cta" onclick="closeDrawer()">Book Discovery Call</a>
+</div>
 
 <section class="why-built">
   <div class="why-built-inner">
@@ -945,13 +982,7 @@
           <div class="scenario-label">Scenario</div>
           <div class="scenario-text" id="frontScenario"></div>
         </div>
-        <div class="front-bottom">
-          <span>Think first → then reveal</span>
-          <div class="hint-wrap">
-            <span class="hint-reveal" id="hintReveal"></span>
-            <button class="hint-btn" id="hintBtn" onclick="toggleHint(event)">Hint</button>
-          </div>
-        </div>
+        <div class="front-bottom">Tap to reveal</div>
       </div>
 
       <!-- BACK -->
@@ -1062,6 +1093,13 @@
     <a href="https://wa.me/917208526046">+91 72085 26046</a>
   </div>
 </footer>
+
+<div class="mobile-cta-bar">
+  <div class="mobile-cta-inner">
+    <a href="index.html#final-cta" class="mobile-primary">Book Discovery Call</a>
+    <a href="dashboard-decisions-guide.pdf" download class="mobile-secondary">Download Free PDF</a>
+  </div>
+</div>
 
 <script>
 const data = {
@@ -1447,11 +1485,6 @@ function renderCard() {
 
   document.getElementById('prevBtn').disabled = currentIndex === 0;
   document.getElementById('nextBtn').disabled = currentIndex === cards.length - 1;
-
-  const hintReveal = document.getElementById('hintReveal');
-  hintReveal.textContent = card.name;
-  hintReveal.classList.remove('visible');
-  document.getElementById('hintBtn').textContent = 'Hint';
 }
 
 function renderProgress() {
@@ -1504,14 +1537,6 @@ function navigate(dir) {
   }
 }
 
-function toggleHint(e) {
-  e.stopPropagation();
-  const hintReveal = document.getElementById('hintReveal');
-  const hintBtn = document.getElementById('hintBtn');
-  const showing = hintReveal.classList.toggle('visible');
-  hintBtn.textContent = showing ? 'Hide' : 'Hint';
-}
-
 function toggleMastered(e) {
   e.stopPropagation();
   mastered[currentCat][currentIndex] = !mastered[currentCat][currentIndex];
@@ -1532,6 +1557,17 @@ document.addEventListener('keydown', e => {
 
 initMastered();
 render();
+
+// Hamburger menu
+const hamburger = document.getElementById('hamburger');
+const navDrawer = document.getElementById('nav-drawer');
+const drawerClose = document.getElementById('drawer-close');
+hamburger.addEventListener('click', () => {
+  const isOpen = navDrawer.classList.toggle('open');
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+});
+drawerClose.addEventListener('click', closeDrawer);
+function closeDrawer() { navDrawer.classList.remove('open'); document.body.style.overflow = ''; }
 </script>
 </body>
 </html>

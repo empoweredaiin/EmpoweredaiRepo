@@ -731,6 +731,42 @@
       .pdf-magnet { padding: 20px 16px; }
     }
 
+    /* ── HAMBURGER & DRAWER ── */
+    .nav-hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      cursor: pointer; padding: 4px; background: none; border: none;
+    }
+    .nav-hamburger span {
+      display: block; width: 22px; height: 2px;
+      background: var(--white); transition: all 0.25s;
+    }
+    .nav-drawer {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: var(--black); flex-direction: column;
+      padding: 80px 32px 40px; gap: 0;
+    }
+    .nav-drawer.open { display: flex; }
+    .nav-drawer a {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 42px;
+      letter-spacing: 0.04em; color: var(--white); text-decoration: none;
+      padding: 12px 0; border-bottom: 1px solid var(--border); transition: color 0.15s;
+    }
+    .nav-drawer a:hover { color: var(--accent-h); }
+    .nav-drawer-cta {
+      margin-top: 32px; background: var(--accent) !important; color: #fff !important;
+      padding: 18px 32px !important; font-size: 18px !important;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      text-decoration: none; text-align: center; display: block; border: none !important;
+    }
+    .drawer-close {
+      position: absolute; top: 20px; right: 24px;
+      font-size: 32px; cursor: pointer; background: none; border: none;
+      color: var(--white); line-height: 1;
+    }
+    @media (max-width: 640px) {
+      .nav-hamburger { display: flex; }
+    }
+
     /* ── MOBILE STICKY CTA ── */
     .mobile-sticky-cta {
       display: none;
@@ -742,23 +778,23 @@
       border-top: 1px solid var(--border-s);
       backdrop-filter: blur(10px);
     }
-    .mobile-sticky-cta a {
-      display: block;
-      background: var(--accent);
-      color: var(--white);
-      text-align: center;
-      padding: 14px 16px;
-      font-family: 'Barlow', sans-serif;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      text-decoration: none;
-      border-radius: 3px;
-      white-space: nowrap;
-      transition: background 0.2s;
+    .mobile-sticky-inner { display: flex; gap: 10px; }
+    .mobile-primary {
+      flex: 1; display: block; background: var(--accent); color: var(--white);
+      text-align: center; padding: 14px; font-family: 'Barlow', sans-serif;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; text-decoration: none;
+      border-radius: 3px; white-space: nowrap; transition: background 0.2s;
     }
-    .mobile-sticky-cta a:hover { background: var(--accent-h); }
+    .mobile-primary:hover { background: var(--accent-h); }
+    .mobile-secondary {
+      flex: 1; display: block; color: rgba(255,255,255,0.65);
+      text-align: center; padding: 13px; font-family: 'Barlow', sans-serif;
+      font-size: 12px; font-weight: 500; letter-spacing: 0.06em;
+      text-decoration: none; border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 3px; white-space: nowrap;
+    }
+    .mobile-secondary:hover { color: var(--white); }
     @media (max-width: 900px) {
       .mobile-sticky-cta { display: block; }
     }
@@ -775,7 +811,18 @@
     <li><a href="dax-flashcards.html">DAX Flash Cards</a></li>
     <li><a href="dashboard-decisions-guide.pdf" download class="btn-nav">Download PDF</a></li>
   </ul>
+  <button class="nav-hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+<div class="nav-drawer" id="nav-drawer">
+  <button class="drawer-close" id="drawer-close" aria-label="Close menu">×</button>
+  <a href="index.html" onclick="closeDrawer()">Home</a>
+  <a href="dax-flashcards.html" onclick="closeDrawer()">DAX Flash Cards</a>
+  <a href="dashboard-decisions-guide.pdf" download onclick="closeDrawer()">Download PDF</a>
+  <a href="index.html#final-cta" class="nav-drawer-cta" onclick="closeDrawer()">Book Discovery Call</a>
+</div>
 
 <!-- HERO -->
 <div class="hero-strip reveal">
@@ -1125,7 +1172,10 @@
 
 <!-- MOBILE STICKY CTA -->
 <div class="mobile-sticky-cta">
-  <a href="dashboard-decisions-guide.pdf" download>Download Free PDF →</a>
+  <div class="mobile-sticky-inner">
+    <a href="index.html#final-cta" class="mobile-primary">Book Discovery Call</a>
+    <a href="dashboard-decisions-guide.pdf" download class="mobile-secondary">Download Free PDF</a>
+  </div>
 </div>
 
 <script>
@@ -1144,6 +1194,17 @@
   }, { rootMargin: '-20% 0px -70% 0px' });
 
   sections.forEach(s => observer.observe(s));
+
+  // Hamburger menu
+  const hamburger = document.getElementById('hamburger');
+  const navDrawer = document.getElementById('nav-drawer');
+  const drawerClose = document.getElementById('drawer-close');
+  hamburger.addEventListener('click', () => {
+    const isOpen = navDrawer.classList.toggle('open');
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  });
+  drawerClose.addEventListener('click', closeDrawer);
+  function closeDrawer() { navDrawer.classList.remove('open'); document.body.style.overflow = ''; }
 </script>
 
 </body>
