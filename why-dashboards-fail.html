@@ -298,6 +298,28 @@
       margin: 0;
     }
 
+    /* ── BEFORE / AFTER VISUAL STATES ── */
+    .verdict-block.before-state {
+      background: rgba(100,30,20,0.2);
+      border: 1px solid rgba(201,74,42,0.35);
+    }
+    .verdict-block.after-state {
+      background: rgba(40,80,50,0.2);
+      border: 1px solid rgba(76,175,80,0.35);
+    }
+    .state-label {
+      font-family: 'Barlow Semi Condensed', sans-serif;
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      margin-bottom: 10px; display: block;
+    }
+    .state-label.before { color: rgba(220,130,110,1); }
+    .state-label.after  { color: #4caf50; }
+    .principle.before-state { border-color: rgba(201,74,42,0.25); }
+    .principle.before-state .principle-label { background: rgba(100,30,20,0.3); border-right-color: rgba(201,74,42,0.2); }
+    .principle.after-state  { border-color: rgba(76,175,80,0.25); }
+    .principle.after-state  .principle-label { background: rgba(40,80,50,0.3); border-right-color: rgba(76,175,80,0.2); }
+
     /* Comparison tables */
     .table-wrap {
       overflow-x: auto;
@@ -926,18 +948,18 @@
     <p>This is the mindset shift most teams miss.</p>
 
     <div class="principles" style="margin-top:24px;margin-bottom:24px">
-      <div class="principle">
+      <div class="principle before-state">
         <div class="principle-label">
-          <div class="p-num">A</div>
-          <div class="p-name">Reports<br>say</div>
+          <div class="p-num" style="color:rgba(220,130,110,0.9)">A</div>
+          <div class="p-name" style="color:var(--muted)">Reports<br>say</div>
         </div>
         <div class="principle-body">
-          <p>"Here's the data."<br>Designed for <strong>exploration</strong>.</p>
+          <p style="color:var(--muted)">"Here's the data."<br>Designed for <strong style="color:var(--muted)">exploration</strong>.</p>
         </div>
       </div>
-      <div class="principle">
+      <div class="principle after-state">
         <div class="principle-label">
-          <div class="p-num">B</div>
+          <div class="p-num" style="color:#4caf50">B</div>
           <div class="p-name">Decision dashboards<br>say</div>
         </div>
         <div class="principle-body">
@@ -974,9 +996,9 @@
     <!-- SECTION 6 -->
     <h2 id="verdicts">Stop Showing Comparisons. Start Showing Verdicts.</h2>
 
-    <div class="verdict-block" style="margin-bottom:12px">
+    <div class="verdict-block before-state" style="margin-bottom:12px">
       <div>
-        <div class="verdict-label">Instead of this</div>
+        <span class="state-label before">✕ Before — Raw Comparison</span>
         <table class="compare-table" style="margin:8px 0 0">
           <thead>
             <tr><th>Actual</th><th>Forecast</th></tr>
@@ -988,9 +1010,9 @@
       </div>
     </div>
 
-    <div class="verdict-block">
+    <div class="verdict-block after-state">
       <div>
-        <div class="verdict-label">Show this</div>
+        <span class="state-label after">✓ After — Decision-Ready</span>
         <div class="verdict-number">+6.8%</div>
       </div>
       <div>
@@ -1063,18 +1085,18 @@
     <h2 id="evolution">The Difference Between Reporting and Operational Intelligence</h2>
 
     <div class="principles" style="margin:32px 0">
-      <div class="principle">
+      <div class="principle before-state">
         <div class="principle-label">
-          <div class="p-num" style="color:var(--muted)">OLD</div>
+          <div class="p-num" style="color:rgba(220,130,110,0.9)">OLD</div>
           <div class="p-name" style="color:var(--muted)">BI</div>
         </div>
         <div class="principle-body">
           <p style="color:var(--muted)">Data retrieval · Historical reporting · Static dashboards · Informational density</p>
         </div>
       </div>
-      <div class="principle">
+      <div class="principle after-state">
         <div class="principle-label">
-          <div class="p-num">NOW</div>
+          <div class="p-num" style="color:#4caf50">NOW</div>
           <div class="p-name">Operational BI</div>
         </div>
         <div class="principle-body">
