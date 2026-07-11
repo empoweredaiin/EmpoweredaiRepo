@@ -1,0 +1,20 @@
+{
+  "redirects": [
+    {
+      "source": "/dax-flashcards-v3.html",
+      "destination": "/dax-flashcards",
+      "permanent": true
+    },
+    {
+      "source": "/dax-flashcards.html",
+      "destination": "/dax-flashcards",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/dax-flashcards",
+      "destination": "/dax-flashcards.html"
+    }
+  ]
+}
