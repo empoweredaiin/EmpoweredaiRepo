@@ -1,0 +1,11 @@
+{
+  "name": "vectordb-art",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interactive VectorDB art experiment: a seeded generator and a heuristic evaluator arranging embeddings on a particle canvas.",
+  "type": "module",
+  "scripts": {
+    "start": "node serve.mjs",
+    "test": "node --test"
+  }
+}

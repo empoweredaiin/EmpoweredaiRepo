@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07080d">
+  <meta name="robots" content="noindex">
+  <title>Vector Garden — a VectorDB art experiment</title>
+  <meta name="description" content="A seeded generator and a heuristic evaluator take turns arranging a small vector database on a particle canvas.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%2307080d'/%3E%3Ccircle cx='5' cy='6' r='2' fill='%233987e5'/%3E%3Ccircle cx='11' cy='5' r='1.5' fill='%23d95926'/%3E%3Ccircle cx='9' cy='11' r='2' fill='%23199e70'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="stage" aria-label="Particle visualisation of the embedding layout. Each particle is one stored vector, coloured by topic. Scroll or pinch to zoom, drag to pan."></canvas>
+
+  <p class="sr-only" id="hovered" aria-live="polite"></p>
+
+  <main class="panel" id="panel">
+    <header class="head">
+      <h1>Vector Garden</h1>
+      <span class="pill" id="status-pill" data-status="idle">Idle</span>
+    </header>
+
+    <section class="hero" aria-live="polite">
+      <p class="hero__label">Best score</p>
+      <p class="hero__value">
+        <span id="best-score">—</span>
+        <span class="hero__target">target <span id="target-score">0.90</span></span>
+      </p>
+      <p class="hero__meta" id="intro">216 vectors in six topics, waiting to be arranged.</p>
+      <p class="hero__meta" id="progress" hidden>
+        Iteration <strong><span id="iteration">0</span></strong> of <span id="iteration-max">100</span>
+        · <span id="accepted">0</span> kept · <span id="rejected">0</span> rejected
+        · <span id="active-time">0.0</span> s
+      </p>
+    </section>
+
+    <p class="reason" id="reason" hidden></p>
+    <p class="error" id="error" role="alert" hidden></p>
+
+    <div class="actions" role="group" aria-label="Loop controls">
+      <button type="button" id="btn-start" class="btn btn--primary">Start</button>
+      <button type="button" id="btn-pause" class="btn btn--primary" hidden>Pause</button>
+      <button type="button" id="btn-resume" class="btn btn--primary" hidden>Resume</button>
+      <button type="button" id="btn-stop" class="btn" hidden>Stop</button>
+      <button type="button" id="btn-reset" class="btn btn--quiet" hidden>Reset</button>
+    </div>
+
+    <section class="block block--history" aria-labelledby="history-title">
+      <h2 id="history-title">Score history</h2>
+      <div class="chart" id="chart">
+        <svg id="chart-svg" role="img" aria-labelledby="history-title"></svg>
+        <div class="chart__tooltip" id="chart-tooltip" hidden></div>
+      </div>
+    </section>
+
+    <section class="block block--criteria" aria-labelledby="criteria-title">
+      <h2 id="criteria-title">Score breakdown</h2>
+      <ul class="criteria" id="criteria"></ul>
+    </section>
+
+    <footer class="foot">
+      <ul class="topics" id="topics" aria-label="Topics"></ul>
+      <label class="seed" for="seed" title="The same seed always replays the same run.">
+        <span>Seed</span>
+        <input id="seed" type="number" inputmode="numeric" min="0" max="999999" step="1" value="7">
+      </label>
+    </footer>
+  </main>
+
+  <div class="view">
+    <p class="view__hint">Scroll to zoom · drag to pan · hover a dot for its word</p>
+    <div class="zoom" id="zoom" role="group" aria-label="Zoom">
+      <button type="button" class="zoom__btn" id="zoom-out" aria-label="Zoom out" disabled>&minus;</button>
+      <button type="button" class="zoom__level" id="zoom-reset" aria-label="Reset zoom" title="Reset zoom" disabled>100%</button>
+      <button type="button" class="zoom__btn" id="zoom-in" aria-label="Zoom in">+</button>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+  <noscript><p class="noscript">This experiment needs JavaScript.</p></noscript>
+</body>
+</html>
