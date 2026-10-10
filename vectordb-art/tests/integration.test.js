@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { CRITERIA, LIMITS, STATUS, TERMINATION, candidateIssues, evaluationIssues } from '../src/contracts.js';
+import { cosine, semanticNeighbours } from '../src/core/knn.js';
 import { createDataset } from '../src/data/dataset.js';
 import { createGenerator } from '../src/generator/generator.js';
 import { createDiscriminator } from '../src/discriminator/discriminator.js';
@@ -113,5 +114,53 @@ test('every termination reason has an explicit description', () => {
   for (const reason of Object.values(TERMINATION)) {
     const { title, detail } = describeTermination(reason, LIMITS);
     assert.ok(title && detail, reason);
+  }
+});
+
+test('the neighbours a selection reveals are the true five nearest by cosine similarity', () => {
+  const lists = semanticNeighbours(dataset, 8);
+  const points = dataset.points;
+  for (let i = 0; i < points.length; i++) {
+    const ranked = points
+      .map((point, j) => ({ j, similarity: j === i ? -Infinity : cosine(points[i].vector, point.vector) }))
+      .sort((a, b) => b.similarity - a.similarity || a.j - b.j)
+      .slice(0, 5)
+      .map((entry) => entry.j);
+    assert.deepEqual(Array.from(lists[i]).slice(0, 5), ranked, `point ${i}`);
+    assert.ok(!ranked.includes(i), 'a point is never its own neighbour');
+  }
+});
+
+test('only a convergence is described as converged; a plateau is named as one', () => {
+  for (const reason of Object.values(TERMINATION)) {
+    assert.equal(describeTermination(reason, LIMITS).converged, reason === TERMINATION.CONVERGED, reason);
+  }
+  const plateau = describeTermination(TERMINATION.PLATEAU, LIMITS);
+  assert.match(plateau.title, /plateau/i);
+  assert.match(plateau.title, /not converged/i);
+  assert.doesNotMatch(plateau.detail, /converged/i);
+});
+
+test('scoring weights and stopping thresholds are unchanged', () => {
+  assert.deepEqual({ ...LIMITS }, {
+    convergenceScore: 0.9,
+    convergenceStreak: 3,
+    plateauEpsilon: 0.005,
+    plateauIterations: 10,
+    maxIterations: 100,
+    timeLimitMs: 10_000,
+  });
+  const evaluation = createDiscriminator({ dataset }).evaluate({
+    candidate: createGenerator({ dataset, seed: 1 }).generate({ iteration: 1, parent: null, feedback: null }),
+    previous: null,
+  });
+  assert.deepEqual(evaluation.weights, { neighbourhood: 0.4, separation: 0.3, overlap: 0.2, stability: 0.1 });
+});
+
+test('pacing the loop at the page speed does not change how seeds 0 to 19 end', async () => {
+  for (let seed = 0; seed < 20; seed++) {
+    const [instant, paced] = await Promise.all([run(seed, { msPerIteration: 0 }), run(seed, { msPerIteration: 200 })]);
+    assert.equal(paced.state.terminationReason, instant.state.terminationReason, `seed ${seed}`);
+    assert.deepEqual(paced.state.history, instant.state.history, `seed ${seed}`);
   }
 });

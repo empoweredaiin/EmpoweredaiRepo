@@ -391,14 +391,13 @@ function eventTarget() {
   };
 }
 
-/** A 2D context that accepts every call, counts drawImage and records drawn text. */
+/** A 2D context that accepts every call, counts painted paths and records drawn text. */
 function fakeContext(stats) {
   const store = {};
   return new Proxy(store, {
     get(target, prop) {
       if (prop in target) return target[prop];
-      if (prop === 'createRadialGradient') return () => ({ addColorStop() {} });
-      if (prop === 'drawImage') return () => void stats.drawImage++;
+      if (prop === 'fill' || prop === 'stroke') return () => void stats.paints++;
       if (prop === 'fillText') return (text) => void stats.texts.push(text);
       return () => {};
     },
@@ -410,7 +409,7 @@ function fakeContext(stats) {
 }
 
 function fakeDom({ width = 800, height = 600, reducedMotion = false } = {}) {
-  const stats = { drawImage: 0, observers: 0, texts: [] };
+  const stats = { paints: 0, observers: 0, texts: [] };
   const frames = new Map();
   let nextId = 1;
   const media = Object.assign(eventTarget(), { matches: reducedMotion });
@@ -451,10 +450,21 @@ function fakeDom({ width = 800, height = 600, reducedMotion = false } = {}) {
 test('renderer exposes exactly the contract methods and paints before start()', () => {
   const dom = fakeDom();
   const renderer = createRenderer({ canvas: dom.canvas, dataset: createDataset() });
-  assert.deepEqual(Object.keys(renderer).sort(), ['destroy', 'pulse', 'resetView', 'resize', 'setLayout', 'start', 'stop', 'zoomBy']);
+  assert.deepEqual(Object.keys(renderer).sort(), [
+    'destroy',
+    'pulse',
+    'resetView',
+    'resize',
+    'select',
+    'setLayout',
+    'showCandidate',
+    'start',
+    'stop',
+    'zoomBy',
+  ]);
   assert.equal(dom.canvas.width, 1600, 'device pixel ratio is capped at 2');
   assert.equal(dom.canvas.height, 1200);
-  assert.ok(dom.stats.drawImage >= 216, 'first frame is painted on creation');
+  assert.ok(dom.stats.paints >= 216, 'first frame is painted on creation');
   assert.equal(dom.frames.size, 0, 'no loop until start()');
   renderer.destroy();
 });
@@ -628,7 +638,7 @@ test('zooming moves the view, keeps hover accurate, labels particles and reports
   dom.canvas.emit('pointermove', { offsetX: 700, offsetY: 500, pointerType: 'mouse' });
   assert.deepEqual(hovers, [5]);
   for (let i = 0; i < 10; i++) dom.flush();
-  assert.ok(dom.stats.texts.includes(dataset.points[5].label), 'the hovered particle gets a tooltip with its word');
+  assert.ok(dom.stats.texts.includes(dataset.points[5].label.toUpperCase()), 'the hovered particle gets a tooltip with its word');
 
   // Zoomed in far enough, every visible particle is labelled with its word.
   dom.stats.texts.length = 0;
@@ -650,4 +660,170 @@ test('zooming moves the view, keeps hover accurate, labels particles and reports
   assert.deepEqual(zooms.map((z) => Math.round(z)), [2, 4, 2, 4, 1]);
   renderer.destroy();
   assert.equal(dom.canvas.listenerCount(), 0);
+});
+
+test('every topic has its own shape, on canvas and in the legend', async () => {
+  const { SHAPES, isStroked, shapeOf, shapeSvg, traceShape } = await import('../src/render/shapes.js');
+  const dataset = createDataset();
+  const used = dataset.clusterNames.map((_, cluster) => shapeOf(cluster));
+  assert.equal(new Set(used).size, dataset.clusterNames.length, 'no two topics share a shape');
+  assert.equal(shapeOf(SHAPES.length), SHAPES[0], 'indices wrap');
+
+  for (const shape of SHAPES) {
+    const calls = [];
+    const ctx = new Proxy({}, { get: (_, method) => (...args) => void calls.push([method, ...args]) });
+    traceShape(ctx, shape, 100, 50, 4);
+    assert.ok(calls.length > 0, `${shape} adds to the path`);
+    for (const [, ...args] of calls) {
+      for (const value of args) assert.ok(Number.isFinite(value), `${shape} uses finite coordinates`);
+    }
+    // Everything stays within a small box around the centre.
+    for (const [method, px, py] of calls) {
+      if (method !== 'moveTo' && method !== 'lineTo') continue;
+      assert.ok(Math.abs(px - 100) <= 6 && Math.abs(py - 50) <= 6, `${shape} stays near its centre`);
+    }
+    const markup = shapeSvg(shape, 'rgb(1 2 3)');
+    assert.ok(markup.startsWith('<svg') && markup.endsWith('</svg>') && markup.includes('aria-hidden="true"'));
+    assert.ok(markup.includes(isStroked(shape) ? 'stroke="rgb(1 2 3)"' : 'fill="rgb(1 2 3)"'));
+  }
+});
+
+/** A renderer over the real dataset with point 5 at the centre and point 9 at the left, everything else in a corner. */
+function selectionFixture(extra = {}) {
+  const dom = fakeDom();
+  const dataset = createDataset();
+  const count = dataset.points.length;
+  const neighbours = Array.from({ length: count }, (_, i) => Int32Array.from({ length: 8 }, (_, k) => (i + k + 1) % count));
+  const selections = [];
+  const renderer = createRenderer({
+    canvas: dom.canvas,
+    dataset,
+    neighbours,
+    onSelect: (index, list) => selections.push([index, list]),
+    ...extra,
+  });
+  const positions = new Float64Array(count * 2).fill(1);
+  positions[10] = 0.5;
+  positions[11] = 0.5;
+  positions[18] = 0.25;
+  positions[19] = 0.5;
+  renderer.setLayout(positions, { immediate: true });
+  renderer.start();
+  const view = computeViewport(800, 600);
+  const at = (index) => {
+    const p = layoutToScreen(view, positions[2 * index], positions[2 * index + 1]);
+    return { offsetX: p.x, offsetY: p.y, pointerType: 'mouse', pointerId: 1 };
+  };
+  const click = (event) => {
+    dom.canvas.emit('pointerdown', event);
+    dom.canvas.emit('pointerup', event);
+  };
+  return { dom, dataset, neighbours, renderer, selections, at, click, positions };
+}
+
+test('clicking a mark selects it and reveals exactly its five nearest neighbours, in order', () => {
+  const { dom, neighbours, renderer, selections, at, click } = selectionFixture();
+  click(at(5));
+  assert.equal(selections.length, 1);
+  assert.equal(selections[0][0], 5);
+  assert.deepEqual(selections[0][1], Array.from(neighbours[5]).slice(0, 5));
+  for (let i = 0; i < 5; i++) dom.flush();
+  renderer.destroy();
+});
+
+test('clicking another mark moves the selection; clicking it again or empty space clears it', () => {
+  const { neighbours, renderer, selections, at, click } = selectionFixture();
+  click(at(5));
+  click(at(9));
+  assert.equal(selections.at(-1)[0], 9);
+  assert.deepEqual(selections.at(-1)[1], Array.from(neighbours[9]).slice(0, 5));
+  click(at(9));
+  assert.deepEqual(selections.at(-1), [null, []]);
+  click(at(5));
+  click({ offsetX: 400, offsetY: 80, pointerType: 'mouse', pointerId: 1 });
+  assert.deepEqual(selections.at(-1), [null, []]);
+  assert.deepEqual(selections.map(([index]) => index), [5, 9, null, 5, null]);
+  renderer.destroy();
+});
+
+test('a drag is not a click, and Escape clears the selection', () => {
+  const { dom, renderer, selections, at, click } = selectionFixture();
+  const start = at(5);
+  dom.canvas.emit('pointerdown', start);
+  dom.canvas.emit('pointermove', { ...start, offsetX: start.offsetX + 30 });
+  dom.canvas.emit('pointerup', { ...start, offsetX: start.offsetX + 30 });
+  assert.deepEqual(selections, [], 'dragging selects nothing');
+
+  click(at(5));
+  dom.win.emit('keydown', { key: 'a' });
+  assert.equal(selections.length, 1);
+  dom.win.emit('keydown', { key: 'Escape' });
+  assert.deepEqual(selections.at(-1), [null, []]);
+  dom.win.emit('keydown', { key: 'Escape' });
+  assert.equal(selections.length, 2, 'Escape with nothing selected does nothing');
+  renderer.destroy();
+  assert.equal(dom.win.listenerCount(), 0);
+});
+
+test('select() honours selectionSize and ignores indices that do not exist', () => {
+  const { renderer, selections } = selectionFixture({ selectionSize: 3 });
+  renderer.select(7);
+  assert.equal(selections.at(-1)[1].length, 3);
+  renderer.select(99999);
+  assert.deepEqual(selections.at(-1), [null, []]);
+  renderer.select(null);
+  assert.equal(selections.length, 2, 'clearing an empty selection reports nothing');
+  renderer.destroy();
+});
+
+test('the tooltip shows the caller-supplied similarity only for a revealed neighbour of the selection', () => {
+  const calls = [];
+  const { dom, neighbours, renderer, at, click, positions } = selectionFixture({
+    similarity: (i, j) => {
+      calls.push([i, j]);
+      return 0.87654;
+    },
+  });
+  const neighbour = neighbours[5][0];
+  const unrelated = neighbours[5][7];
+  // Put one revealed neighbour and one unrelated point where they can be hovered.
+  positions[2 * neighbour] = 0.75;
+  positions[2 * neighbour + 1] = 0.5;
+  positions[2 * unrelated] = 0.5;
+  positions[2 * unrelated + 1] = 0.25;
+  renderer.setLayout(positions, { immediate: true });
+  const view = computeViewport(800, 600);
+  const hover = (index) => {
+    const p = layoutToScreen(view, positions[2 * index], positions[2 * index + 1]);
+    dom.canvas.emit('pointermove', { offsetX: p.x, offsetY: p.y, pointerType: 'mouse' });
+    dom.stats.texts.length = 0;
+    for (let i = 0; i < 12; i++) dom.flush();
+    return [...dom.stats.texts];
+  };
+
+  assert.ok(!hover(neighbour).some((text) => text.startsWith('cos')), 'no similarity without a selection');
+  click(at(5));
+  const texts = hover(neighbour);
+  assert.ok(texts.includes('cos 0.877'), texts.join('|'));
+  assert.deepEqual(calls.at(-1), [5, neighbour], 'similarity is asked for the selected point and the hovered one');
+  assert.ok(!hover(unrelated).some((text) => text.startsWith('cos')), 'unrelated points show no similarity');
+  renderer.destroy();
+});
+
+test('showCandidate overlays a proposal without moving the layout, and tolerates bad input', () => {
+  const { dom, renderer, selections, at, click, positions } = selectionFixture();
+  const candidate = Float64Array.from(positions, (v) => 1 - v);
+  renderer.showCandidate(candidate);
+  candidate.fill(0.3);
+  for (let i = 0; i < 20; i++) dom.flush();
+  // Point 5 is still where the accepted layout put it, so a click there still finds it.
+  click(at(5));
+  assert.equal(selections.at(-1)[0], 5);
+  renderer.pulse('rejected');
+  for (let i = 0; i < 40; i++) dom.flush();
+  renderer.showCandidate(new Float64Array(3));
+  renderer.showCandidate(null);
+  renderer.pulse('accepted');
+  for (let i = 0; i < 5; i++) dom.flush();
+  renderer.destroy();
 });

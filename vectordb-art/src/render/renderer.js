@@ -1,6 +1,7 @@
 /**
- * Canvas renderer: one glowing particle per dataset point over a quiet dust
- * field. It owns the canvas, its requestAnimationFrame loop and pointer
+ * Canvas renderer: one flat geometric mark per dataset point over a drafting
+ * grid. Background hairlines between near neighbours stay very quiet; clicking
+ * a mark selects it and draws clear connections to its nearest neighbours. It owns the canvas, its requestAnimationFrame loop and pointer
  * handling; all simulation maths lives in particles.js and pulses.js.
  *
  * It knows nothing about generators, scores or iterations: layouts are pushed
@@ -26,40 +27,50 @@ import {
   clampDt,
   clusterColour,
   computeViewport,
-  createDust,
   createFrame,
   createParticles,
   hitTest,
   setTargets,
   snapParticles,
-  stepDust,
   stepParticles,
 } from './particles.js';
 import { TERMINATED_DURATION, clearPulses, createPulseState, stepPulses, triggerPulse } from './pulses.js';
+import { STROKE_RATIO, isStroked, shapeOf, traceShape } from './shapes.js';
 
 const MAX_PIXEL_RATIO = 2;
-const DUST_COUNT = 150;
-const DUST_COLOUR = Object.freeze([150, 165, 210]);
-const SPRITE_SIZE = 64;
-/** The sprite's bright core ends at about this fraction of its radius. */
-const SPRITE_CORE_RATIO = 0.2;
+/** Each point is joined to this many of its nearest semantic neighbours. */
+const EDGE_NEIGHBOURS = 3;
+/** Edge opacity by length, as a fraction of the layout size: short edges read, long ones recede. */
+const EDGE_BANDS = Object.freeze([
+  Object.freeze({ maxLength: 0.07, alpha: 0.13 }),
+  Object.freeze({ maxLength: 0.22, alpha: 0.04 }),
+  Object.freeze({ maxLength: Infinity, alpha: 0.012 }),
+]);
+/** How many nearest neighbours a selected mark reveals. */
+const DEFAULT_SELECTION_SIZE = 5;
+const SELECT_EASE_RATE = 9;
+/** Seconds a rejected candidate's overlay takes to fade. */
+const GHOST_FADE_TIME = 0.35;
+/** Decorative sway, in screen pixels and radians per second. It never touches simulation or layout coordinates. */
+const DRIFT_AMPLITUDE = 1.2;
+const DRIFT_RATE = 0.32;
+const GRID_DIVISIONS = 8;
 const HIT_RADIUS_MOUSE = 22;
 const HIT_RADIUS_TOUCH = 32;
-const TRAIL_FADE_RATE = 5;
-const TRAIL_ALPHA = 0.55;
-const TRAIL_MIN_SPEED = 20;
-/** Seconds without any moving particle after which the trail layer is wiped clean. */
-const TRAIL_SETTLE_TIME = 1.2;
 const FOCUS_EASE_RATE = 12;
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 /** Word labels fade in between these zoom levels. */
 const LABEL_ZOOM_START = 2.4;
 const LABEL_ZOOM_FULL = 3.4;
-const LABEL_FONT = '500 11px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
-const TOOLTIP_FONT = '600 13px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
-const TOOLTIP_NOTE_FONT = '400 12px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
-const INK = '#eef0f6';
-const INK_MUTED = '#a9aebd';
+const LABEL_FONT = '600 12px "Barlow Condensed", "Arial Narrow", sans-serif';
+const TOOLTIP_FONT = '700 16px "Barlow Condensed", "Arial Narrow", sans-serif';
+const TOOLTIP_NOTE_FONT = '400 12px "Barlow", system-ui, sans-serif';
+const TOOLTIP_VALUE_FONT = '400 12px "IBM Plex Mono", ui-monospace, monospace';
+const LABEL_TRACKING = '0.06em';
+const INK = '#e8e6e1';
+const INK_MUTED = '#9a9ba0';
+const ACCENT = '#e8603d';
+const SURFACE = '#1e1f23';
 /** Above this zoom the pointer reads particles instead of pushing them. */
 const PUSH_MAX_ZOOM = 1.15;
 const WHEEL_ZOOM_RATE = 0.0016;
@@ -67,30 +78,6 @@ const PINCH_WHEEL_ZOOM_RATE = 0.012;
 const DOUBLE_CLICK_ZOOM = 3;
 /** A press that moves less than this many pixels is a tap, not a drag. */
 const DRAG_THRESHOLD = 4;
-
-/**
- * Pre-renders a soft radial glow so each particle costs one drawImage.
- * @param {Document} doc
- * @param {ReadonlyArray<number>} colour [r, g, b]
- * @returns {HTMLCanvasElement}
- */
-function createSprite(doc, [r, g, b]) {
-  const sprite = doc.createElement('canvas');
-  sprite.width = SPRITE_SIZE;
-  sprite.height = SPRITE_SIZE;
-  const half = SPRITE_SIZE / 2;
-  const context = sprite.getContext('2d');
-  const gradient = context.createRadialGradient(half, half, 0, half, half, half);
-  const lift = (channel) => Math.round(channel + (255 - channel) * 0.6);
-  gradient.addColorStop(0, `rgba(${lift(r)}, ${lift(g)}, ${lift(b)}, 1)`);
-  gradient.addColorStop(0.1, `rgba(${r}, ${g}, ${b}, 0.95)`);
-  gradient.addColorStop(0.22, `rgba(${r}, ${g}, ${b}, 0.36)`);
-  gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.08)`);
-  gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, SPRITE_SIZE, SPRITE_SIZE);
-  return sprite;
-}
 
 /**
  * Creates the renderer for a dataset.
@@ -101,8 +88,14 @@ function createSprite(doc, [r, g, b]) {
  * them. `getInsets` wins when both are given.
  *
  * The view can be zoomed (wheel, pinch, double-click, zoomBy) and panned (drag
- * while zoomed in). Hovering a particle shows a floating tooltip with its word;
- * zoomed in far enough, every particle is labelled.
+ * while zoomed in). Hovering a mark brackets it and shows one tooltip with its
+ * word and topic. Clicking or tapping a mark selects it: its nearest neighbours
+ * (the first `selectionSize` entries of `neighbours[index]`, which the caller
+ * supplies in order of real vector similarity) are joined to it and everything
+ * else recedes. Hovering one of those neighbours adds `similarity(selected,
+ * hovered)` to the tooltip. Zoomed in far enough, every mark is labelled.
+ *
+ * The renderer never computes similarity or chooses neighbours itself.
  *
  * @param {import('../contracts.js').RendererOptions & {
  *   insets?: import('./particles.js').Insets,
@@ -111,7 +104,18 @@ function createSprite(doc, [r, g, b]) {
  * @returns {import('../contracts.js').Renderer}
  */
 export function createRenderer(options) {
-  const { canvas, dataset, neighbours = null, onHover = null, onViewChange = null, insets = null, getInsets = null } = options;
+  const {
+    canvas,
+    dataset,
+    neighbours = null,
+    similarity = null,
+    selectionSize = DEFAULT_SELECTION_SIZE,
+    onHover = null,
+    onSelect = null,
+    onViewChange = null,
+    insets = null,
+    getInsets = null,
+  } = options;
   const doc = canvas.ownerDocument;
   const win = doc.defaultView;
   const ctx = canvas.getContext('2d');
@@ -119,7 +123,6 @@ export function createRenderer(options) {
 
   const count = dataset.points.length;
   const particles = createParticles({ count, seed: dataset.seed });
-  const dust = createDust({ count: DUST_COUNT, seed: dataset.seed });
   const pulses = createPulseState();
   const frame = createFrame();
   const viewport = frame.viewport;
@@ -131,27 +134,38 @@ export function createRenderer(options) {
     clusterOf[i] = dataset.points[i].cluster;
     if (clusterOf[i] + 1 > clusterCount) clusterCount = clusterOf[i] + 1;
   }
-  const sprites = [];
   const strokeStyles = [];
-  const members = [];
+  const shapes = [];
   for (let c = 0; c < clusterCount; c++) {
     const [r, g, b] = clusterColour(c);
-    sprites.push(createSprite(doc, [r, g, b]));
     strokeStyles.push(`rgb(${r}, ${g}, ${b})`);
-    const list = [];
-    for (let i = 0; i < count; i++) if (clusterOf[i] === c) list.push(i);
-    members.push(Uint32Array.from(list));
+    shapes.push(shapeOf(c));
   }
-  const dustSprite = createSprite(doc, DUST_COLOUR);
-  const rejectSprite = createSprite(doc, [214, 72, 86]);
+  const labels = dataset.points.map((point) => point.label.toUpperCase());
 
-  /* Motion trails live on their own layer so static glows never accumulate. */
-  const trail = doc.createElement('canvas');
-  const trailCtx = trail.getContext('2d');
-  const prevX = new Float32Array(count);
-  const prevY = new Float32Array(count);
+  /* Each pair of near neighbours once, grouped by the cluster of its first point: [i0, j0, i1, j1, ...]. */
+  const edges = Array.from({ length: clusterCount }, () => []);
+  if (neighbours) {
+    const seen = new Set();
+    for (let i = 0; i < count; i++) {
+      const list = neighbours[i];
+      for (let k = 0; list && k < Math.min(EDGE_NEIGHBOURS, list.length); k++) {
+        const j = list[k];
+        if (!(j >= 0 && j < count) || j === i) continue;
+        const key = i < j ? i * count + j : j * count + i;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        edges[clusterOf[i]].push(i, j);
+      }
+    }
+  }
 
-  const isNeighbour = new Uint8Array(count);
+  /** Role of each point in the current selection: 0 unrelated, 1 neighbour, 2 the selected point. */
+  const related = new Uint8Array(count);
+  /** Where each mark is drawn this frame: simulation position plus decorative drift. */
+  const drawn = { x: new Float32Array(count), y: new Float32Array(count) };
+  /** Proposed candidate layout being shown, in layout (unit square) coordinates. */
+  const ghost = new Float64Array(count * 2);
   /** Pointer position in screen (CSS pixel) coordinates. */
   const pointer = { x: 0, y: 0, radius: HIT_RADIUS_MOUSE, inside: false };
   const camera = createCamera();
@@ -165,7 +179,6 @@ export function createRenderer(options) {
   let cssHeight = 0;
   let pixelRatio = 1;
   let coreRadius = 2;
-  let ambient = null;
   let needsSnap = true;
   let running = false;
   let destroyed = false;
@@ -173,8 +186,16 @@ export function createRenderer(options) {
   let lastTime = -1;
   /** @type {number|null} */
   let hovered = null;
+  /** Last hovered point; kept while its highlight fades out. */
   let focus = -1;
   let focusMix = 0;
+  let selected = -1;
+  /** @type {number[]} */
+  let selectedNeighbours = [];
+  let selectMix = 0;
+  /** 'none' | 'proposed' | 'rejected' */
+  let ghostState = 'none';
+  let ghostMix = 0;
 
   frame.reducedMotion = motionQuery ? motionQuery.matches : false;
 
@@ -187,18 +208,41 @@ export function createRenderer(options) {
     if (index === hovered) return;
     hovered = index;
     frame.exempt = index ?? -1;
-    if (index !== null) {
-      focus = index;
-      isNeighbour.fill(0);
-      const list = neighbours ? neighbours[index] : null;
-      if (list) {
-        for (let k = 0; k < list.length; k++) {
-          const j = list[k];
-          if (j >= 0 && j < count) isNeighbour[j] = 1;
-        }
-      }
-    }
+    if (index !== null) focus = index;
     if (onHover) onHover(index);
+  }
+
+  /**
+   * Selects a point, or clears the selection with null. Selecting the point
+   * that is already selected clears it.
+   * @param {number|null} index
+   */
+  function select(index) {
+    if (destroyed) return;
+    const next = index === null || index === selected || !(index >= 0 && index < count) ? -1 : index;
+    if (next === selected) return;
+    selected = next;
+    related.fill(0);
+    selectedNeighbours = [];
+    if (next >= 0) {
+      related[next] = 2;
+      const list = neighbours ? neighbours[next] : null;
+      for (let k = 0; list && k < list.length && selectedNeighbours.length < selectionSize; k++) {
+        const j = list[k];
+        if (!(j >= 0 && j < count) || j === next) continue;
+        related[j] = 1;
+        selectedNeighbours.push(j);
+      }
+      // Moving the selection eases from part-way, so focus visibly transfers instead of snapping.
+      selectMix = Math.min(selectMix, 0.35);
+    }
+    if (onSelect) onSelect(next < 0 ? null : next, selectedNeighbours.slice());
+    if (rafId === 0) draw();
+  }
+
+  /** @param {KeyboardEvent} event */
+  function onKeyDown(event) {
+    if (event.key === 'Escape' && selected >= 0) select(null);
   }
 
   function updateHover() {
@@ -224,7 +268,7 @@ export function createRenderer(options) {
       reportedZoom = camera.targetZoom;
       onViewChange(reportedZoom);
     }
-    if (rafId === 0) draw(0);
+    if (rafId === 0) draw();
   }
 
   /** @param {number} factor Multiplies the zoom, about the centre of the layout area. */
@@ -275,9 +319,17 @@ export function createRenderer(options) {
     onPointerMove(event);
   }
 
-  /** @param {PointerEvent} event */
+  /**
+   * A press released without dragging is a click: it selects the mark under it, or clears.
+   * @param {PointerEvent} event
+   */
   function onPointerUp(event) {
-    pressed.delete(event.pointerId);
+    const wasPressed = pressed.delete(event.pointerId);
+    if (!wasPressed || pressed.size > 0 || dragDistance > DRAG_THRESHOLD) return;
+    const radius = (event.pointerType === 'touch' ? HIT_RADIUS_TOUCH : HIT_RADIUS_MOUSE) / camera.zoom;
+    const hit = hitTest(particles, toWorldX(camera, event.offsetX), toWorldY(camera, event.offsetY), radius);
+    if (hit === null) select(null);
+    else select(hit);
   }
 
   /** @param {PointerEvent} event */
@@ -327,259 +379,357 @@ export function createRenderer(options) {
   /* Drawing                                                          */
   /* ---------------------------------------------------------------- */
 
-  let trailQuietTime = 0;
-  let trailDirty = false;
-
-  function resetTrails() {
-    trailDirty = false;
-    prevX.set(particles.x);
-    prevY.set(particles.y);
-    trailCtx.setTransform(1, 0, 0, 1, 0, 0);
-    trailCtx.clearRect(0, 0, trail.width, trail.height);
-    trailCtx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  /** Radius of one mark in world units; marks grow with the square root of the zoom. */
+  function markRadius() {
+    return (coreRadius * 1.05) / Math.sqrt(camera.zoom);
   }
 
-  /** @param {number} dt */
-  function updateTrails(dt) {
-    trailCtx.globalCompositeOperation = 'destination-out';
-    trailCtx.globalAlpha = 1 - Math.exp(-dt * TRAIL_FADE_RATE);
-    trailCtx.fillStyle = '#000';
-    trailCtx.fillRect(0, 0, cssWidth, cssHeight);
+  /** The layout square as a drafting sheet: hairline grid, frame and corner marks. */
+  function drawGrid() {
+    const { x, y, size } = viewport;
+    if (size <= 0) return;
+    const hair = 1 / camera.zoom;
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = hair;
 
-    trailCtx.globalCompositeOperation = 'lighter';
-    trailCtx.globalAlpha = 0.5;
-    trailCtx.lineCap = 'round';
-    trailCtx.lineWidth = coreRadius * 0.9;
-    const { x, y, vx, vy } = particles;
-    const minSpeed2 = TRAIL_MIN_SPEED * TRAIL_MIN_SPEED;
-    let moving = false;
-    for (let c = 0; c < clusterCount; c++) {
-      const list = members[c];
-      trailCtx.strokeStyle = strokeStyles[c];
-      trailCtx.beginPath();
-      for (let k = 0; k < list.length; k++) {
-        const i = list[k];
-        if (vx[i] * vx[i] + vy[i] * vy[i] < minSpeed2) continue;
-        moving = true;
-        trailCtx.moveTo(prevX[i], prevY[i]);
-        trailCtx.lineTo(x[i], y[i]);
-      }
-      trailCtx.stroke();
-    }
-    prevX.set(x);
-    prevY.set(y);
-
-    // The alpha fade above cannot take 8-bit pixels all the way to zero, so faint streaks would
-    // linger forever. Once nothing has moved for a while, clear the layer outright.
-    if (moving) {
-      trailQuietTime = 0;
-      trailDirty = true;
-    } else if (trailDirty && (trailQuietTime += dt) >= TRAIL_SETTLE_TIME) {
-      resetTrails();
-    }
-  }
-
-  function drawDust() {
-    const still = frame.reducedMotion;
-    const time = particles.time;
-    for (let i = 0; i < dust.count; i++) {
-      const depth = dust.depth[i];
-      const twinkle = still ? 1 : 0.7 + 0.3 * Math.sin(time * 0.6 + dust.phase[i]);
-      const radius = 2.5 + 6 * depth;
-      ctx.globalAlpha = (0.05 + 0.16 * depth) * twinkle;
-      ctx.drawImage(dustSprite, dust.x[i] * cssWidth - radius, dust.y[i] * cssHeight - radius, radius * 2, radius * 2);
-    }
-  }
-
-  function drawLinks() {
-    if (focusMix < 0.01 || focus < 0 || !neighbours) return;
-    const list = neighbours[focus];
-    if (!list) return;
-    const { x, y } = particles;
-    ctx.globalAlpha = 0.42 * focusMix;
-    ctx.strokeStyle = strokeStyles[clusterOf[focus]];
-    ctx.lineWidth = 1 / camera.zoom;
+    // The same module continues edge to edge, so the frame reads as part of a larger sheet.
+    const cell = size / GRID_DIVISIONS;
+    ctx.globalAlpha = 0.04;
     ctx.beginPath();
-    for (let k = 0; k < list.length; k++) {
-      const j = list[k];
-      if (j < 0 || j >= count) continue;
-      ctx.moveTo(x[focus], y[focus]);
+    for (let gx = x - Math.ceil(x / cell) * cell; gx <= cssWidth; gx += cell) {
+      ctx.moveTo(gx, 0);
+      ctx.lineTo(gx, cssHeight);
+    }
+    for (let gy = y - Math.ceil(y / cell) * cell; gy <= cssHeight; gy += cell) {
+      ctx.moveTo(0, gy);
+      ctx.lineTo(cssWidth, gy);
+    }
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.14;
+    ctx.strokeRect(x, y, size, size);
+
+    // Corner marks, like the registration marks on a print sheet.
+    const arm = size * 0.035;
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    for (const [cx, cy, dx, dy] of [
+      [x, y, 1, 1],
+      [x + size, y, -1, 1],
+      [x, y + size, 1, -1],
+      [x + size, y + size, -1, -1],
+    ]) {
+      ctx.moveTo(cx + dx * arm, cy);
+      ctx.lineTo(cx, cy);
+      ctx.lineTo(cx, cy + dy * arm);
+    }
+    ctx.stroke();
+  }
+
+  /** Refreshes the drawn positions: simulation position plus a slow, tiny sway. */
+  function updateDrawn() {
+    const { x, y, phase, time } = particles;
+    const amplitude = frame.reducedMotion ? 0 : DRIFT_AMPLITUDE / camera.zoom;
+    for (let i = 0; i < count; i++) {
+      drawn.x[i] = x[i] + amplitude * Math.sin(time * DRIFT_RATE + phase[i]);
+      drawn.y[i] = y[i] + amplitude * Math.cos(time * DRIFT_RATE * 0.83 + phase[i] * 1.7);
+    }
+  }
+
+  /** Background hairlines between near neighbours: deliberately faint, fainter still under a selection. */
+  function drawEdges() {
+    const { x, y } = drawn;
+    const dim = 1 - 0.7 * selectMix;
+    ctx.lineWidth = 1 / camera.zoom;
+    let from = 0;
+    for (const band of EDGE_BANDS) {
+      const to = band.maxLength * viewport.size;
+      ctx.globalAlpha = band.alpha * dim;
+      for (let c = 0; c < clusterCount; c++) {
+        const list = edges[c];
+        ctx.strokeStyle = strokeStyles[c];
+        ctx.beginPath();
+        for (let e = 0; e < list.length; e += 2) {
+          const i = list[e];
+          const j = list[e + 1];
+          const length = Math.hypot(x[i] - x[j], y[i] - y[j]);
+          if (length < from || length >= to) continue;
+          ctx.moveTo(x[i], y[i]);
+          ctx.lineTo(x[j], y[j]);
+        }
+        ctx.stroke();
+      }
+      from = to;
+    }
+  }
+
+  /**
+   * The proposed candidate: a small tick where each mark would go, joined to
+   * where the mark is now. Off-white while proposed, rust while a rejection fades.
+   */
+  function drawGhost() {
+    if (ghostMix < 0.01) return;
+    const { x, y } = drawn;
+    const view = viewport;
+    const tick = 1.6 / camera.zoom;
+    const colour = ghostState === 'rejected' ? ACCENT : INK;
+    ctx.strokeStyle = colour;
+    ctx.fillStyle = colour;
+    ctx.lineWidth = 1 / camera.zoom;
+    ctx.globalAlpha = 0.16 * ghostMix;
+    ctx.beginPath();
+    for (let i = 0; i < count; i++) {
+      ctx.moveTo(x[i], y[i]);
+      ctx.lineTo(view.x + ghost[2 * i] * view.size, view.y + ghost[2 * i + 1] * view.size);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 0.5 * ghostMix;
+    for (let i = 0; i < count; i++) {
+      ctx.fillRect(view.x + ghost[2 * i] * view.size - tick / 2, view.y + ghost[2 * i + 1] * view.size - tick / 2, tick, tick);
+    }
+  }
+
+  /** Clear connections from the selected mark to each of its nearest neighbours. */
+  function drawSelection() {
+    if (selectMix < 0.01 || selected < 0) return;
+    const { x, y } = drawn;
+    ctx.globalAlpha = 0.92 * selectMix;
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 1.5 / camera.zoom;
+    ctx.beginPath();
+    for (const j of selectedNeighbours) {
+      ctx.moveTo(x[selected], y[selected]);
       ctx.lineTo(x[j], y[j]);
     }
     ctx.stroke();
   }
 
   function drawParticles() {
-    const { x, y, depth, phase, time } = particles;
-    const still = frame.reducedMotion;
-    const accepted = pulses.accepted;
-    const rejected = pulses.rejected;
-    const bloom = pulses.terminatedAge < 0 ? 0 : 1 - pulses.terminatedAge / TERMINATED_DURATION;
-    const brightness = (1 + 0.3 * accepted + 0.3 * bloom * bloom) * (1 - 0.18 * rejected);
-    const swell = 1 + 0.14 * accepted;
-    // Glows grow with the square root of the zoom, so zooming in opens up space between them.
-    const spriteRadius = coreRadius / SPRITE_CORE_RATIO / Math.sqrt(camera.zoom);
+    const { x, y } = drawn;
+    const { depth } = particles;
+    const base = markRadius() * (1 + 0.1 * pulses.accepted);
+    const fade = 1 - 0.12 * pulses.rejected;
 
     for (let i = 0; i < count; i++) {
-      let alpha = (0.6 + 0.4 * depth[i]) * brightness;
-      let radius = spriteRadius * (0.72 + 0.56 * depth[i]) * swell;
-      if (!still) alpha *= 0.88 + 0.12 * Math.sin(time * 1.3 + phase[i]);
-      if (focusMix > 0) {
-        if (i === focus) {
-          alpha *= 1 + 0.6 * focusMix;
-          radius *= 1 + 0.35 * focusMix;
-        } else if (isNeighbour[i]) alpha *= 1 + 0.25 * focusMix;
-        else alpha *= 1 - 0.5 * focusMix;
+      const c = clusterOf[i];
+      // Marks are opaque so the hairlines beneath never show through; depth varies size only.
+      let alpha = fade;
+      let radius = base * (0.86 + 0.28 * depth[i]);
+      if (selectMix > 0) {
+        if (related[i] === 2) radius *= 1 + 0.3 * selectMix;
+        else if (related[i] === 0) alpha *= 1 - 0.62 * selectMix;
       }
-      let px = x[i];
-      let py = y[i];
-      if (rejected > 0) {
-        px += Math.sin(i * 12.9898 + time * 83) * 1.5 * rejected;
-        py += Math.cos(i * 78.233 + time * 71) * 1.5 * rejected;
-      }
-      ctx.globalAlpha = alpha > 1 ? 1 : alpha;
-      ctx.drawImage(sprites[clusterOf[i]], px - radius, py - radius, radius * 2, radius * 2);
-      if (rejected > 0.02) {
-        ctx.globalAlpha = 0.22 * rejected;
-        ctx.drawImage(rejectSprite, px - radius, py - radius, radius * 2, radius * 2);
+      if (i === focus && focusMix > 0) radius *= 1 + 0.18 * focusMix;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      traceShape(ctx, shapes[c], x[i], y[i], radius);
+      if (isStroked(shapes[c])) {
+        ctx.strokeStyle = strokeStyles[c];
+        ctx.lineWidth = radius * STROKE_RATIO;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = strokeStyles[c];
+        ctx.fill();
       }
     }
   }
 
-  function drawFocusRing() {
-    if (focusMix < 0.01 || focus < 0) return;
-    ctx.globalAlpha = 0.75 * focusMix;
-    ctx.strokeStyle = '#eef0ff';
+  /**
+   * Corner brackets around one mark.
+   * @param {number} index
+   * @param {number} alpha
+   */
+  function drawBracket(index, alpha) {
+    const half = focusRadius() / camera.zoom;
+    const arm = half * 0.5;
+    const cx = drawn.x[index];
+    const cy = drawn.y[index];
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = INK;
     ctx.lineWidth = 1.25 / camera.zoom;
     ctx.beginPath();
-    ctx.arc(particles.x[focus], particles.y[focus], focusRadius() / camera.zoom, 0, Math.PI * 2);
+    for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      ctx.moveTo(cx + dx * half, cy + dy * (half - arm));
+      ctx.lineTo(cx + dx * half, cy + dy * half);
+      ctx.lineTo(cx + dx * (half - arm), cy + dy * half);
+    }
     ctx.stroke();
   }
 
-  /** Radius of the ring around the focused particle, in screen pixels. */
-  function focusRadius() {
-    return coreRadius * 2.2 * Math.sqrt(camera.zoom) + 3;
+  /** Full brackets on the selected mark, lighter ones on the hovered mark. */
+  function drawBrackets() {
+    if (selected >= 0 && selectMix >= 0.01) drawBracket(selected, selectMix);
+    if (focus >= 0 && focus !== selected && focusMix >= 0.01) drawBracket(focus, 0.6 * focusMix);
   }
 
-  /** Words beside every visible particle, once zoomed in far enough to read them. */
+  /** Half the side of the bracket around a mark, in screen pixels. */
+  function focusRadius() {
+    return coreRadius * 2.2 * Math.sqrt(camera.zoom) + 4;
+  }
+
+  /**
+   * Text with a background-coloured outline, so it stays readable over lines and marks.
+   * @param {string} text
+   * @param {number} sx
+   * @param {number} sy
+   */
+  function haloText(text, sx, sy) {
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = BACKGROUND;
+    ctx.strokeText(text, sx, sy);
+    ctx.fillText(text, sx, sy);
+  }
+
+  /** Words beside every visible mark, once zoomed in far enough to read them. */
   function drawLabels() {
     const strength = (camera.zoom - LABEL_ZOOM_START) / (LABEL_ZOOM_FULL - LABEL_ZOOM_START);
-    if (strength <= 0) return;
-    const { x, y } = particles;
+    const { x, y } = drawn;
     const offset = coreRadius * Math.sqrt(camera.zoom) + 5;
     ctx.font = LABEL_FONT;
+    ctx.letterSpacing = LABEL_TRACKING;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     ctx.fillStyle = INK;
-    for (let i = 0; i < count; i++) {
-      const sx = toScreenX(camera, x[i]);
-      const sy = toScreenY(camera, y[i]);
-      if (sx < -80 || sx > cssWidth || sy < -10 || sy > cssHeight + 10) continue;
-      if (i === focus && focusMix > 0.5) continue;
-      const dim = focusMix > 0 && !isNeighbour[i] ? 1 - 0.65 * focusMix : 1;
-      ctx.globalAlpha = Math.min(1, strength) * 0.82 * dim;
-      ctx.fillText(dataset.points[i].label, sx + offset, sy);
+    const tooltipOn = focusMix > 0.5;
+    if (strength > 0) {
+      for (let i = 0; i < count; i++) {
+        if (i === selected || (i === focus && tooltipOn)) continue;
+        const sx = toScreenX(camera, x[i]);
+        const sy = toScreenY(camera, y[i]);
+        if (sx < -80 || sx > cssWidth || sy < -10 || sy > cssHeight + 10) continue;
+        const dim = related[i] === 0 ? 1 - 0.7 * selectMix : 1;
+        ctx.globalAlpha = Math.min(1, strength) * 0.85 * dim;
+        haloText(labels[i], sx + offset, sy + 0.5);
+      }
     }
+    // The selected mark keeps its word at any zoom, unless the tooltip is already showing it.
+    // It sits below the mark, clear of the tooltip, which opens above.
+    if (selected >= 0 && selectMix >= 0.01 && !(focus === selected && tooltipOn)) {
+      ctx.globalAlpha = selectMix;
+      ctx.textAlign = 'center';
+      haloText(labels[selected], toScreenX(camera, x[selected]), toScreenY(camera, y[selected]) + focusRadius() + 10);
+      ctx.textAlign = 'left';
+    }
+    ctx.letterSpacing = '0px';
   }
 
-  /** Floating tooltip beside the hovered particle: its word and topic. */
+  /**
+   * The one floating tooltip, beside the hovered mark: its shape, word and
+   * topic, plus its similarity to the selected mark when it is one of that
+   * mark's revealed neighbours.
+   */
   function drawTooltip() {
     if (focusMix < 0.01 || focus < 0) return;
     const point = dataset.points[focus];
+    const word = labels[focus];
     const note = dataset.clusterNames[point.cluster] ?? '';
+    let extra = '';
+    if (selected >= 0 && focus === selected) extra = 'selected';
+    else if (selected >= 0 && related[focus] === 1 && similarity) {
+      const value = similarity(selected, focus);
+      if (Number.isFinite(value)) extra = `cos ${value.toFixed(3)}`;
+    }
     const widthOf = (text) => ctx.measureText(text)?.width ?? text.length * 7;
     ctx.font = TOOLTIP_FONT;
-    const wordWidth = widthOf(point.label);
+    ctx.letterSpacing = LABEL_TRACKING;
+    const wordWidth = widthOf(word);
+    ctx.letterSpacing = '0px';
+    ctx.font = TOOLTIP_VALUE_FONT;
+    const extraWidth = extra ? widthOf(extra) + 14 : 0;
     ctx.font = TOOLTIP_NOTE_FONT;
     const noteWidth = widthOf(note);
-    const padding = 10;
-    const swatch = 8;
-    const textLeft = padding + swatch + 7;
-    const width = textLeft + wordWidth + 8 + noteWidth + padding;
-    const height = 30;
-    const sx = toScreenX(camera, particles.x[focus]);
-    const sy = toScreenY(camera, particles.y[focus]);
+    const padding = 11;
+    const glyph = 5;
+    const textLeft = padding + glyph * 2 + 9;
+    const width = textLeft + wordWidth + 10 + noteWidth + extraWidth + padding;
+    const height = 32;
+    const sx = toScreenX(camera, drawn.x[focus]);
+    const sy = toScreenY(camera, drawn.y[focus]);
     const gap = focusRadius() + 8;
+    const fieldRight = viewport.fieldX + viewport.fieldW;
     let left = sx + gap;
-    if (left + width > cssWidth - 8) left = sx - gap - width;
-    const top = Math.min(cssHeight - height - 8, Math.max(8, sy - gap - height));
+    if (left + width > fieldRight - 8) left = sx - gap - width;
+    const top = Math.round(Math.min(cssHeight - height - 8, Math.max(viewport.fieldY + 8, sy - gap - height)));
+    left = Math.round(left);
     const middle = top + height / 2;
 
     ctx.globalAlpha = focusMix;
-    ctx.fillStyle = 'rgba(21, 24, 35, 0.94)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fillStyle = SURFACE;
+    ctx.fillRect(left, top, width, height);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    if (typeof ctx.roundRect === 'function') ctx.roundRect(left, top, width, height, 8);
-    else ctx.rect(left, top, width, height);
-    ctx.fill();
-    ctx.stroke();
+    ctx.lineJoin = 'miter';
+    ctx.strokeRect(left + 0.5, top + 0.5, width - 1, height - 1);
+    // A short accent rule along the top edge ties the tooltip to the rest of the interface.
+    ctx.fillStyle = ACCENT;
+    ctx.fillRect(left, top, 18, 2);
 
-    ctx.fillStyle = strokeStyles[point.cluster];
+    const shape = shapes[point.cluster];
     ctx.beginPath();
-    ctx.arc(left + padding + swatch / 2, middle, swatch / 2, 0, Math.PI * 2);
-    ctx.fill();
+    traceShape(ctx, shape, left + padding + glyph, middle, glyph);
+    if (isStroked(shape)) {
+      ctx.strokeStyle = strokeStyles[point.cluster];
+      ctx.lineWidth = glyph * STROKE_RATIO;
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = strokeStyles[point.cluster];
+      ctx.fill();
+    }
 
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     ctx.font = TOOLTIP_FONT;
+    ctx.letterSpacing = LABEL_TRACKING;
     ctx.fillStyle = INK;
-    ctx.fillText(point.label, left + textLeft, middle + 0.5);
+    ctx.fillText(word, left + textLeft, middle + 1);
+    ctx.letterSpacing = '0px';
+    if (extra) {
+      ctx.font = TOOLTIP_VALUE_FONT;
+      ctx.fillStyle = ACCENT;
+      ctx.fillText(extra, left + textLeft + wordWidth + 10 + noteWidth + 14, middle + 1);
+    }
     ctx.font = TOOLTIP_NOTE_FONT;
     ctx.fillStyle = INK_MUTED;
-    ctx.fillText(note, left + textLeft + wordWidth + 8, middle + 0.5);
+    ctx.fillText(note, left + textLeft + wordWidth + 10, middle + 1);
   }
 
-  function drawTerminatedRing() {
+  function drawTerminatedFrame() {
     if (pulses.terminatedAge < 0) return;
     const progress = pulses.terminatedAge / TERMINATED_DURATION;
     const eased = 1 - (1 - progress) * (1 - progress) * (1 - progress);
-    const fade = (1 - progress) * (1 - progress);
-    const cx = viewport.x + viewport.size / 2;
-    const cy = viewport.y + viewport.size / 2;
-    const radius = viewport.size * (0.08 + 0.72 * eased);
-    ctx.strokeStyle = '#dcd8ff';
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.globalAlpha = 0.06 * fade;
-    ctx.lineWidth = 14;
-    ctx.stroke();
-    ctx.globalAlpha = 0.4 * fade;
-    ctx.lineWidth = 1.25 / camera.zoom;
-    ctx.stroke();
+    const grow = viewport.size * 0.06 * eased;
+    ctx.globalAlpha = 0.9 * (1 - progress) * (1 - progress);
+    ctx.strokeStyle = ACCENT;
+    ctx.lineWidth = 1.5 / camera.zoom;
+    ctx.strokeRect(viewport.x - grow, viewport.y - grow, viewport.size + grow * 2, viewport.size + grow * 2);
   }
 
-  /** @param {number} dt Seconds since the previous frame; 0 repaints without advancing trails. */
-  function draw(dt) {
+  /** Repaints the canvas from the current simulation state. */
+  function draw() {
     if (cssWidth === 0 || cssHeight === 0) return;
+    updateDrawn();
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
     ctx.fillStyle = BACKGROUND;
     ctx.fillRect(0, 0, cssWidth, cssHeight);
-    if (ambient) {
-      ctx.fillStyle = ambient;
-      ctx.fillRect(0, 0, cssWidth, cssHeight);
-    }
 
-    ctx.globalCompositeOperation = 'lighter';
-    drawDust();
     // Everything that belongs to the layout is drawn through the camera.
     const scale = pixelRatio * camera.zoom;
     ctx.setTransform(scale, 0, 0, scale, pixelRatio * camera.x, pixelRatio * camera.y);
-    if (!frame.reducedMotion) {
-      if (dt > 0) updateTrails(dt);
-      ctx.globalAlpha = TRAIL_ALPHA;
-      ctx.drawImage(trail, 0, 0, cssWidth, cssHeight);
-    }
-    drawLinks();
+    ctx.lineCap = 'butt';
+    ctx.lineJoin = 'miter';
+    drawGrid();
+    drawEdges();
+    drawGhost();
+    drawSelection();
     drawParticles();
-    drawFocusRing();
-    drawTerminatedRing();
+    drawBrackets();
+    drawTerminatedFrame();
 
     // Text is drawn in screen space so it stays crisp and the same size at any zoom.
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    ctx.globalCompositeOperation = 'source-over';
     drawLabels();
     drawTooltip();
   }
@@ -591,16 +741,19 @@ export function createRenderer(options) {
   /** @param {number} dt */
   function update(dt) {
     const still = frame.reducedMotion;
-    if (!still) {
-      stepPulses(pulses, dt);
-      stepDust(dust, dt, particles.time);
-    }
+    if (!still) stepPulses(pulses, dt);
     if (still) snapCamera(camera);
     else stepCamera(camera, dt);
     updateHover();
     stepParticles(particles, dt, frame);
     const goal = hovered === null ? 0 : 1;
     focusMix = still ? goal : focusMix + (goal - focusMix) * (1 - Math.exp(-dt * FOCUS_EASE_RATE));
+    const selectGoal = selected < 0 ? 0 : 1;
+    selectMix = still ? selectGoal : selectMix + (selectGoal - selectMix) * (1 - Math.exp(-dt * SELECT_EASE_RATE));
+    if (ghostState === 'rejected') {
+      ghostMix = still ? 0 : Math.max(0, ghostMix - dt / GHOST_FADE_TIME);
+      if (ghostMix === 0) ghostState = 'none';
+    }
   }
 
   /** @param {number} now */
@@ -609,7 +762,7 @@ export function createRenderer(options) {
     const dt = lastTime < 0 ? DEFAULT_DT : clampDt((now - lastTime) / 1000);
     lastTime = now;
     update(dt);
-    draw(dt);
+    draw();
   }
 
   function schedule() {
@@ -635,8 +788,7 @@ export function createRenderer(options) {
       clearPulses(pulses);
       snapParticles(particles, frame);
     }
-    resetTrails();
-    if (rafId === 0) draw(0);
+    if (rafId === 0) draw();
   }
 
   /* ---------------------------------------------------------------- */
@@ -659,25 +811,15 @@ export function createRenderer(options) {
     if (resized) {
       canvas.width = pixelWidth;
       canvas.height = pixelHeight;
-      trail.width = pixelWidth;
-      trail.height = pixelHeight;
     }
     if (cssWidth === 0 || cssHeight === 0) return;
-
-    const cx = viewport.x + viewport.size / 2;
-    const cy = viewport.y + viewport.size / 2;
-    ambient = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(cssWidth, cssHeight) * 0.7);
-    ambient.addColorStop(0, 'rgba(46, 52, 104, 0.2)');
-    ambient.addColorStop(0.5, 'rgba(24, 28, 60, 0.09)');
-    ambient.addColorStop(1, 'rgba(7, 8, 13, 0)');
 
     // A resized window is followed at once: particles jump to the new fit instead of drifting to it.
     if (needsSnap || resized) {
       snapParticles(particles, frame);
       needsSnap = false;
     }
-    if (resized) resetTrails();
-    if (rafId === 0) draw(0);
+    if (rafId === 0) draw();
   }
 
   /**
@@ -690,15 +832,44 @@ export function createRenderer(options) {
     if ((layoutOptions && layoutOptions.immediate) || frame.reducedMotion) {
       if (!needsSnap) {
         snapParticles(particles, frame);
-        resetTrails();
-        if (rafId === 0) draw(0);
+        if (rafId === 0) draw();
       }
     }
   }
 
-  /** @param {'accepted'|'rejected'|'terminated'} kind */
+  /**
+   * Shows a proposed candidate layout over the current one, or hides it with null.
+   * The array is copied. It stays until the next pulse('accepted' | 'rejected').
+   * @param {Float64Array|null} positions
+   */
+  function showCandidate(positions) {
+    if (destroyed) return;
+    if (!positions || positions.length !== ghost.length) {
+      ghostState = 'none';
+      ghostMix = 0;
+    } else {
+      ghost.set(positions);
+      ghostState = 'proposed';
+      ghostMix = 1;
+    }
+    if (rafId === 0) draw();
+  }
+
+  /**
+   * Resolves the candidate overlay and plays a brief accent: an accepted
+   * candidate's overlay disappears as the marks move to it, a rejected one
+   * turns rust and fades while the marks stay where they are.
+   * @param {'accepted'|'rejected'|'terminated'} kind
+   */
   function pulse(kind) {
-    if (destroyed || frame.reducedMotion) return;
+    if (destroyed) return;
+    if (kind === 'accepted' || (kind === 'rejected' && frame.reducedMotion)) {
+      ghostState = 'none';
+      ghostMix = 0;
+    } else if (kind === 'rejected' && ghostState === 'proposed') {
+      ghostState = 'rejected';
+    }
+    if (frame.reducedMotion) return;
     triggerPulse(pulses, kind);
   }
 
@@ -722,6 +893,7 @@ export function createRenderer(options) {
     destroyed = true;
     if (resizeObserver) resizeObserver.disconnect();
     win.removeEventListener('resize', resize);
+    win.removeEventListener('keydown', onKeyDown);
     doc.removeEventListener('visibilitychange', onVisibilityChange);
     if (motionQuery) motionQuery.removeEventListener('change', onMotionPreferenceChange);
     canvas.removeEventListener('pointermove', onPointerMove);
@@ -736,6 +908,7 @@ export function createRenderer(options) {
 
   if (resizeObserver) resizeObserver.observe(canvas);
   win.addEventListener('resize', resize);
+  win.addEventListener('keydown', onKeyDown);
   doc.addEventListener('visibilitychange', onVisibilityChange);
   if (motionQuery) motionQuery.addEventListener('change', onMotionPreferenceChange);
   canvas.addEventListener('pointermove', onPointerMove);
@@ -750,5 +923,5 @@ export function createRenderer(options) {
 
   resize();
 
-  return { setLayout, pulse, zoomBy, resetView, start, stop, resize, destroy };
+  return { setLayout, showCandidate, pulse, select, zoomBy, resetView, start, stop, resize, destroy };
 }

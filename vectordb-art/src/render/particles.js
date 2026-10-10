@@ -10,20 +10,21 @@ import { clamp01 } from '../contracts.js';
 import { createRng, hashSeed } from '../core/rng.js';
 
 /** Canvas background colour. */
-export const BACKGROUND = '#07080d';
+export const BACKGROUND = '#111214';
 
 /**
- * One [r, g, b] colour per cluster, tuned to sit on near-black under additive
- * blending without tipping into neon.
+ * One [r, g, b] colour per cluster: a restrained set drawn from the EMPOWEREDAI
+ * site (rust accent, off-white, muted grey) plus three quiet hues. Every topic
+ * also has its own shape (see shapes.js), so identity never rests on colour alone.
  * @type {ReadonlyArray<ReadonlyArray<number>>}
  */
 export const PALETTE = Object.freeze([
-  Object.freeze([57, 135, 229]), // tides: blue
-  Object.freeze([217, 89, 38]), // circuits: orange
-  Object.freeze([25, 158, 112]), // orchards: aqua
-  Object.freeze([201, 133, 0]), // archives: yellow
-  Object.freeze([213, 81, 129]), // weather: magenta
-  Object.freeze([0, 131, 0]), // cities: green
+  Object.freeze([95, 147, 184]), // tides: steel blue
+  Object.freeze([232, 96, 61]), // circuits: rust
+  Object.freeze([95, 174, 118]), // orchards: green
+  Object.freeze([209, 167, 44]), // archives: gold
+  Object.freeze([232, 230, 225]), // weather: off-white
+  Object.freeze([106, 104, 112]), // cities: grey
 ]);
 
 /** Largest simulation step in seconds; longer frames are clamped to this. */

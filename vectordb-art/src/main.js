@@ -4,7 +4,7 @@
  * controller, the renderer and the panel, and passes data between them.
  */
 import { DEFAULT_WEIGHTS, EVENTS, LIMITS, NEIGHBOUR_K, TERMINATION } from './contracts.js';
-import { semanticNeighbours } from './core/knn.js';
+import { cosine, semanticNeighbours } from './core/knn.js';
 import { createDataset } from './data/dataset.js';
 import { createGenerator } from './generator/generator.js';
 import { CRITERION_DESCRIPTIONS, createDiscriminator } from './discriminator/discriminator.js';
@@ -12,37 +12,68 @@ import { createLoopController } from './loop/controller.js';
 import { MAX_ZOOM } from './render/camera.js';
 import { PALETTE } from './render/particles.js';
 import { createRenderer } from './render/renderer.js';
+import { shapeOf, shapeSvg } from './render/shapes.js';
 import { createHud } from './ui/hud.js';
 
-/** Pause between iterations: long enough to watch each step, short enough for 100 iterations inside the 10 s limit. */
-const STEP_MS = 90;
+/**
+ * Pause between iterations. Each one is shown as: candidate proposed, then (PROPOSE_MS later) kept or
+ * rejected. At 200 ms, 60 seeds checked end for the same reason as with no pause at all; from about
+ * 240 ms the longest runs start reaching the 10 s time limit instead.
+ */
+const STEP_MS = 200;
+/** How long a proposed candidate is shown before its verdict. Generating and scoring take under 3 ms. */
+const PROPOSE_MS = 90;
 const NARROW_QUERY = '(max-width: 860px)';
-const PANEL_GAP = 16;
+/** Clear space between the artwork and the chrome around it, in CSS pixels. */
+const CHROME_GAP = 24;
+/** Height of the row of view controls: along the bottom on wide screens, under the bar on narrow ones. */
+const VIEW_ROW = 44;
 /** One press of a zoom button. */
 const ZOOM_STEP = 1.6;
-/** Space kept free at the top of narrow screens, where the zoom control sits. */
-const ZOOM_CONTROL_HEIGHT = 48;
 
 const canvas = document.getElementById('stage');
+const bar = document.getElementById('bar');
 const panel = document.getElementById('panel');
+const inspector = document.getElementById('inspector');
 
 const dataset = createDataset();
 const discriminator = createDiscriminator({ dataset });
 
-/** Keeps the layout clear of the panel: beside it on wide screens, above it on narrow ones. */
+/**
+ * Keeps the artwork clear of the chrome. Wide screens: below the bar, between the rail and the
+ * inspector (when open). Narrow screens: between the bar and the bottom sheet.
+ */
 function getInsets() {
-  const box = panel.getBoundingClientRect();
+  const top = bar.getBoundingClientRect().bottom;
+  const rail = panel.getBoundingClientRect();
+  const inspectorBox = inspector.hidden ? null : inspector.getBoundingClientRect();
   if (window.matchMedia(NARROW_QUERY).matches) {
-    return { top: ZOOM_CONTROL_HEIGHT, right: 0, bottom: window.innerHeight - box.top + PANEL_GAP / 2, left: 0 };
+    const sheetTop = inspectorBox ? inspectorBox.top : rail.top;
+    return { top: top + VIEW_ROW, right: 0, bottom: window.innerHeight - sheetTop + CHROME_GAP / 2, left: 0 };
   }
-  return { top: 0, right: 0, bottom: 0, left: box.right + PANEL_GAP };
+  return {
+    top,
+    right: inspectorBox ? window.innerWidth - inspectorBox.left + CHROME_GAP : 0,
+    bottom: VIEW_ROW,
+    left: rail.right + CHROME_GAP,
+  };
 }
+
+/** Cosine similarity of two stored vectors: the one measure used for neighbours and for the scores shown. */
+const similarity = (i, j) => cosine(dataset.points[i].vector, dataset.points[j].vector);
 
 const renderer = createRenderer({
   canvas,
   dataset,
+  // Neighbour lists come from the vectors themselves, closest first; the renderer only draws them.
   neighbours: semanticNeighbours(dataset, NEIGHBOUR_K),
+  similarity,
   getInsets,
+  onSelect: (index, nearest) =>
+    hud.setSelection(
+      index === null ? null : dataset.points[index],
+      nearest.map((j) => ({ point: dataset.points[j], similarity: similarity(index, j) })),
+    ),
   onHover: (index) => hud.setHover(index === null ? null : dataset.points[index]),
   onViewChange: (zoom) => hud.setZoom(zoom),
 });
@@ -58,7 +89,7 @@ const hud = createHud({
   limits: LIMITS,
   weights: DEFAULT_WEIGHTS,
   criterionDescriptions: CRITERION_DESCRIPTIONS,
-  clusterColors: PALETTE.map(([r, g, b]) => `rgb(${r} ${g} ${b})`),
+  clusterMarks: PALETTE.map(([r, g, b], cluster) => shapeSvg(shapeOf(cluster), `rgb(${r} ${g} ${b})`, 11)),
   maxZoom: MAX_ZOOM,
   handlers: {
     start() {
@@ -90,17 +121,41 @@ function reportFailure(error) {
   hud.setError(`The run failed: ${error instanceof Error ? error.message : String(error)}`);
 }
 
+/** The iteration whose candidate is on screen and whose verdict has not been shown yet. */
+let pending = null;
+let verdictTimer = 0;
+
+/** Shows the verdict of the pending iteration: the layout moves only if the candidate was accepted. */
+function showVerdict() {
+  if (!pending) return;
+  clearTimeout(verdictTimer);
+  const { state, record } = pending;
+  pending = null;
+  if (record.accepted) renderer.setLayout(state.best.candidate.positions);
+  renderer.pulse(record.accepted ? 'accepted' : 'rejected');
+  hud.update(state);
+  hud.setPhase({ kind: record.accepted ? 'accepted' : 'rejected', record });
+}
+
 /** @param {import('./contracts.js').LoopEvent} event */
 function onLoopEvent(event) {
   const { type, state, record } = event;
+  // Anything still waiting is settled first, so there is never more than one timer or one overlay.
+  showVerdict();
   if (type === EVENTS.ITERATION) {
-    if (record.accepted) renderer.setLayout(state.best.candidate.positions);
-    renderer.pulse(record.accepted ? 'accepted' : 'rejected');
-  } else if (type === EVENTS.TERMINATE && state.terminationReason !== TERMINATION.CANCELLED) {
+    renderer.showCandidate(state.last.candidate.positions);
+    hud.setPhase({ kind: 'evaluating', iteration: record.iteration });
+    pending = { state, record };
+    verdictTimer = setTimeout(showVerdict, PROPOSE_MS);
+    return;
+  }
+  if (type === EVENTS.TERMINATE && state.terminationReason !== TERMINATION.CANCELLED) {
     renderer.pulse('terminated');
   } else if (type === EVENTS.RESET) {
+    renderer.showCandidate(null);
     renderer.setLayout(null);
   }
+  if (type === EVENTS.START || type === EVENTS.TERMINATE || type === EVENTS.RESET) hud.setPhase(null);
   hud.update(state);
 }
 
@@ -119,8 +174,14 @@ function build(nextSeed) {
   hud.update(controller.getState());
 }
 
+hud.setSelection(null);
 build(hud.getSeed() ?? dataset.seed);
 renderer.start();
 window.matchMedia(NARROW_QUERY).addEventListener('change', () => renderer.resize());
-// The panel grows and shrinks with its content, so the layout is refitted to the space beside it.
-new ResizeObserver(() => renderer.resize()).observe(panel);
+// The chrome grows, shrinks, opens and closes, so the artwork is refitted to the space it leaves.
+const chromeObserver = new ResizeObserver(() => {
+  // On narrow screens the inspector stacks directly above the bottom sheet.
+  document.documentElement.style.setProperty('--rail-h', `${Math.ceil(panel.getBoundingClientRect().height)}px`);
+  renderer.resize();
+});
+for (const element of [bar, panel, inspector]) chromeObserver.observe(element);

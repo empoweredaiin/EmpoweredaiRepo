@@ -299,7 +299,12 @@ export const EVENTS = Object.freeze({
  * @property {Dataset} dataset
  * @property {ReadonlyArray<ArrayLike<number>>} [neighbours]  Semantic neighbours per point
  *           (see core/knn.js), used to draw links around the hovered point.
+ * @property {(i: number, j: number) => number} [similarity]  Similarity of two points, computed by the caller
+ *           from the stored vectors. Shown when hovering a neighbour of the selected point.
+ * @property {number} [selectionSize]                          Neighbours revealed by a selection. Default 5.
  * @property {(index: number|null) => void} [onHover]         Called when the hovered point changes.
+ * @property {(index: number|null, neighbours: number[]) => void} [onSelect]
+ *           Called when the selected point changes, with the neighbours it reveals, closest first.
  * @property {(zoom: number) => void} [onViewChange]          Called when the zoom level changes (1 = whole layout).
  * @property {() => { top: number, right: number, bottom: number, left: number }} [getInsets]
  *           CSS-pixel margins the layout must stay clear of (the control panel). Read on every resize.
@@ -310,7 +315,12 @@ export const EVENTS = Object.freeze({
  * @property {(positions: Float64Array|null, options?: { immediate?: boolean }) => void} setLayout
  *           Target layout the particles ease towards. null scatters them to their idle drift.
  *           The array is copied, never retained or mutated.
- * @property {(kind: 'accepted'|'rejected'|'terminated') => void} pulse  Brief visual accent.
+ * @property {(positions: Float64Array|null) => void} showCandidate
+ *           Overlay a proposed layout on the current one until the next pulse; null hides it.
+ * @property {(kind: 'accepted'|'rejected'|'terminated') => void} pulse
+ *           Resolve the candidate overlay ('accepted' | 'rejected') and play a brief accent.
+ * @property {(index: number|null) => void} select  Select a point and reveal its nearest neighbours;
+ *           null, or the point already selected, clears the selection.
  * @property {(factor: number) => void} zoomBy   Multiply the zoom about the centre of the layout area.
  * @property {() => void} resetView              Return to the unzoomed view.
  * @property {() => void} start     Begin the animation loop (idempotent).

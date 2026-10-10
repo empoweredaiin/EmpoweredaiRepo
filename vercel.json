@@ -9,6 +9,11 @@
       "source": "/dax-flashcards.html",
       "destination": "/dax-flashcards",
       "permanent": true
+    },
+    {
+      "source": "/vector-garden",
+      "destination": "/vectordb-art/",
+      "permanent": false
     }
   ],
   "rewrites": [
